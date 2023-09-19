@@ -3,11 +3,19 @@ alchemist = "28.0.1"
 
 [libraries]
 alchemist = { module = "it.unibo.alchemist:alchemist", version.ref = "alchemist" }
-alchemist-incarnation-protelis = { module = "it.unibo.alchemist:alchemist-incarnation-protelis", version.ref = "alchemist" }
+alchemist-incarnation-scafi = { module = "it.unibo.alchemist:alchemist-incarnation-scafi", version.ref = "alchemist" }
+alchemist-incarnation-collektive = { module = "it.unibo.collektive:alchemist-incarnation-collektive", version = "0.2.0" }
+alchemist-euclidean-geometry = { module = "it.unibo.alchemist:alchemist-euclidean-geometry", version.ref = "alchemist" }
 alchemist-swingui = { module = "it.unibo.alchemist:alchemist-swingui", version.ref = "alchemist" }
 
 [bundles]
-alchemist = ["alchemist", "alchemist-incarnation-protelis", "alchemist-swingui"]
+alchemist = [
+    "alchemist",
+    "alchemist-incarnation-scafi",
+    "alchemist-incarnation-collektive",
+    "alchemist-euclidean-geometry",
+    "alchemist-swingui"
+]
 
 [plugins]
 multiJvmTesting = "org.danilopianini.multi-jvm-test-plugin:0.5.5"
