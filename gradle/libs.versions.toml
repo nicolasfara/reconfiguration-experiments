@@ -1,5 +1,6 @@
 [versions]
 alchemist = "28.0.1"
+kotlin = "1.9.0"
 
 [libraries]
 alchemist = { module = "it.unibo.alchemist:alchemist", version.ref = "alchemist" }
@@ -12,7 +13,7 @@ alchemist-swingui = { module = "it.unibo.alchemist:alchemist-swingui", version.r
 alchemist = [
     "alchemist",
     "alchemist-incarnation-scafi",
-    "alchemist-incarnation-collektive",
+    # "alchemist-incarnation-collektive",
     "alchemist-euclidean-geometry",
     "alchemist-swingui"
 ]
@@ -20,3 +21,4 @@ alchemist = [
 [plugins]
 multiJvmTesting = "org.danilopianini.multi-jvm-test-plugin:0.5.5"
 taskTree = "com.dorongold.task-tree:2.1.1"
+kotlin = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }

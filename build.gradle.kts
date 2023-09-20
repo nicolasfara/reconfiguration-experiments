@@ -1,11 +1,15 @@
+import org.gradle.configurationcache.extensions.capitalized
+
 /*
  * DEFAULT GRADLE BUILD FOR ALCHEMIST SIMULATOR
  */
 
 plugins {
     application
+    scala
     alias(libs.plugins.multiJvmTesting) // Pre-configures the Java toolchains
     alias(libs.plugins.taskTree) // Helps debugging dependencies among gradle tasks
+    alias(libs.plugins.kotlin)
 }
 
 repositories {
@@ -18,7 +22,7 @@ dependencies {
 }
 
 multiJvm {
-    jvmVersionForCompilation.set(latestJava)
+    jvmVersionForCompilation.set(17)
 }
 
 val batch: String by project
@@ -40,7 +44,7 @@ File(rootProject.rootDir.path + "/src/main/yaml").listFiles()
     ?.sortedBy { it.nameWithoutExtension } // sort them, we like reproducibility
     ?.forEach {
         // one simulation file -> one gradle task
-        val task by tasks.register<JavaExec>("run${it.nameWithoutExtension.uppercase()}") {
+        val task by tasks.register<JavaExec>("run${it.nameWithoutExtension.capitalized()}") {
             group = alchemistGroup // This is for better organization when running ./gradlew tasks
             description = "Launches simulation ${it.nameWithoutExtension}" // Just documentation
             mainClass.set("it.unibo.alchemist.Alchemist") // The class to launch
