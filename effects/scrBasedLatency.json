@@ -62,6 +62,66 @@
   {
     "type": "class it.unibo.alchemist.boundary.gui.effects.DrawShape",
     "curIncarnation": "scafi",
+    "mode": "DRAW_RECTANGLE",
+    "red": {
+      "max": 255,
+      "min": 0,
+      "val": 0
+    },
+    "blue": {
+      "max": 255,
+      "min": 0,
+      "val": 0
+    },
+    "green": {
+      "max": 255,
+      "min": 0,
+      "val": 0
+    },
+    "alpha": {
+      "max": 255,
+      "min": 0,
+      "val": 255
+    },
+    "scaleFactor": {
+      "max": 100,
+      "min": 0,
+      "val": 50
+    },
+    "size": {
+      "max": 100,
+      "min": 0,
+      "val": 34
+    },
+    "molFilter": true,
+    "molString": "isThickHost",
+    "molPropertyFilter": true,
+    "property": "",
+    "writingPropertyValue": false,
+    "c": "ALPHA",
+    "reverse": false,
+    "propoom": {
+      "max": 10,
+      "min": -10,
+      "val": 0
+    },
+    "minprop": {
+      "max": 10,
+      "min": -10,
+      "val": 0
+    },
+    "maxprop": {
+      "max": 10,
+      "min": -10,
+      "val": 1
+    },
+    "colorCache": {
+      "value": -16777216
+    }
+  },
+  {
+    "type": "class it.unibo.alchemist.boundary.gui.effects.DrawShape",
+    "curIncarnation": "scafi",
     "mode": "FILL_ELLIPSE",
     "red": {
       "max": 255,
@@ -91,7 +151,7 @@
     "size": {
       "max": 100,
       "min": 0,
-      "val": 24
+      "val": 33
     },
     "molFilter": true,
     "molString": "leader",
@@ -122,16 +182,16 @@
   {
     "type": "class it.unibo.alchemist.boundary.gui.effects.DrawShape",
     "curIncarnation": "scafi",
-    "mode": "DRAW_RECTANGLE",
+    "mode": "FILL_ELLIPSE",
     "red": {
       "max": 255,
       "min": 0,
-      "val": 0
+      "val": 93
     },
     "blue": {
       "max": 255,
       "min": 0,
-      "val": 0
+      "val": 93
     },
     "green": {
       "max": 255,
@@ -151,14 +211,14 @@
     "size": {
       "max": 100,
       "min": 0,
-      "val": 30
+      "val": 27
     },
     "molFilter": true,
-    "molString": "isThickHost",
+    "molString": "leaderZone",
     "molPropertyFilter": true,
     "property": "",
-    "writingPropertyValue": false,
-    "c": "ALPHA",
+    "writingPropertyValue": true,
+    "c": "HUE",
     "reverse": false,
     "propoom": {
       "max": 10,
@@ -173,10 +233,10 @@
     "maxprop": {
       "max": 10,
       "min": -10,
-      "val": 1
+      "val": 10
     },
     "colorCache": {
-      "value": -16777216
+      "value": -10682275
     }
   }
 ]

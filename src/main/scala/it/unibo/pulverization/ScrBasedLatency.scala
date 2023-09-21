@@ -25,9 +25,13 @@ class ScrBasedLatency extends AggregateProgram
     // Get the IDs belonging to the region
     val devicesIds = C[Double, Set[ID]](distanceFromLeader, _ ++ _, Set(mid()), Set.empty)
 
+    // Propagate the leader ID to the nodes belonging to the region
+    val leaderZone = Gcurried[ID](leader)(mid())(identity) { () => distanceFromLeader }
+
     node.put("isThickHost", isThickHost)
     node.put("leader", leader)
+    node.put("leaderZone", leaderZone)
     node.put("distanceFromLeader", distanceFromLeader)
-    node.put("regionIDs", devicesIds)
+    node.put("devicesIds", devicesIds)
   }
 }
