@@ -186,12 +186,12 @@
     "red": {
       "max": 255,
       "min": 0,
-      "val": 93
+      "val": 154
     },
     "blue": {
       "max": 255,
       "min": 0,
-      "val": 93
+      "val": 255
     },
     "green": {
       "max": 255,
@@ -214,7 +214,7 @@
       "val": 27
     },
     "molFilter": true,
-    "molString": "leaderZone",
+    "molString": "leaderEffect",
     "molPropertyFilter": true,
     "property": "",
     "writingPropertyValue": true,
@@ -233,10 +233,10 @@
     "maxprop": {
       "max": 10,
       "min": -10,
-      "val": 10
+      "val": 8
     },
     "colorCache": {
-      "value": -10682275
+      "value": -6684417
     }
   }
 ]
