@@ -1,0 +1,58 @@
+incarnation: scafi
+
+variables:
+  random: &random
+    min: 0
+    max: 5
+    step: 1
+    default: 3
+  range: &range
+    formula: 1.5
+    language: scala
+  thickHosts: &thickHostsList
+    language: scala
+    formula: |
+      import scala.util.Random
+      val rand = new Random(random.asInstanceOf[Double].toInt)
+      (0 to 10).toList
+
+_constants:
+  retentionTime: &retentionTime 5.0
+
+seeds:
+  scenario: *random
+  simulation: *random
+
+network-model:
+  type: ConnectWithinDistance # *connectionType
+  parameters: [*range]
+
+_reactions:
+  - program: &setupDevice
+      - time-distribution:
+          type: Trigger
+          parameters: 0
+        type: Event
+        actions:
+          - type: RunScafiProgram
+            parameters: [it.unibo.pulverization.common.SetupNode]
+      - program: send
+  - program: &program
+      - time-distribution: 0.3
+        type: Event
+        actions:
+          - type: RunScafiProgram
+            parameters: [it.unibo.pulverization.LeaderElection, *retentionTime]
+      - program: send
+
+deployments: ## i.e, how to place nodes
+  #  type: Grid
+  #  parameters: [ 0, 0, 10, 10, 1, 1, 0.5, 0.5 ]
+  type: Grid
+  parameters: [ -5, -5, 5, 5, 1, 1, 0.3, 0.3 ]
+  programs: ## the reactions installed in each nodes
+    - *program
+    - *setupDevice
+  contents:
+    - molecule: thickHostsList
+      concentration: *thickHostsList
