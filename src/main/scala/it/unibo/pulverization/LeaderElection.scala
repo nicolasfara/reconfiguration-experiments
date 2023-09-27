@@ -9,18 +9,18 @@ class LeaderElection extends AggregateProgram
     val isThickHost = node.get[Boolean]("isThickHost")
     val leader = S(isThickHost, 3, nbrRange _)
     val leaderId = G[ID](leader, if (leader) mid() else -1, identity, nbrRange _)
-//    node.put("leader", leaderId)
-//    node.put("leaderEffect", leaderId % 10)
+
     node.put("isLeader", leader)
     node.put("leaderId", leaderId)
     node.put("leaderEffect", leaderId)
-    // Return value of the program
+
     leader
   }
 
   private def S(suitable: Boolean, grain: Double, metric: Metric): Boolean = {
+    // Prevents oscillations on the border of the region
     val uid = mux(suitable) { randomUid } { (Double.PositiveInfinity, Int.MaxValue) }
-    breakUsingUids(suitable, uid, grain, metric) && suitable
+    breakUsingUids(suitable, uid, grain, metric)
   }
 
   private def breakUsingUids(suitable: Boolean, uid: (Double, Int), grain: Double, metric: Metric): Boolean = {
@@ -35,6 +35,6 @@ class LeaderElection extends AggregateProgram
       // To solve the conflict, devices abdicate in favor of devices with
       // lowest UID, according to 'distanceCompetition'.
       distanceCompetition(dist, lead, uid, grain, metric)
-    }
+    } && suitable
   }
 }
