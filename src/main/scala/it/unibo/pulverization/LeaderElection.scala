@@ -5,16 +5,28 @@ import it.unibo.alchemist.model.scafi.ScafiIncarnationForAlchemist._
 class LeaderElection extends AggregateProgram
   with StandardSensors with ScafiAlchemistSupport with BlockG with BlockC with BlockS {
 
-  override def main(): Any = {
-    val isThickHost = node.get[Boolean]("isThickHost")
-    val leader = S(isThickHost, 3, nbrRange _)
-    val leaderId = G[ID](leader, if (leader) mid() else -1, identity, nbrRange _)
+  type Ctype = String
+  type CID = Int
+  type AllocationMap = Map[(Ctype, CID), ID]
+  type RelocationStrategy = Set[(Ctype, CID)] => AllocationMap
 
+  override def main(): Any = {
+    val allocation = reconfigurationStrategy(3.0, nbrRange _){ _ => Map.empty }
+    node.put("allocation", allocation)
+  }
+
+  def reconfigurationStrategy(regionGrain: Double, metric: Metric)(strategy: RelocationStrategy): AllocationMap = {
+    val isThickHost = node.get[Boolean]("isThickHost")
+    val leader = S(isThickHost, regionGrain, metric)
+    val leaderId = G[ID](leader, if (leader) mid() else -1, identity, metric)
     node.put("isLeader", leader)
     node.put("leaderId", leaderId)
     node.put("leaderEffect", leaderId)
 
-    leader
+    val distances = distanceTo(leader, metric)
+    val gather = C[Double, Set[(Ctype, CID)]](distances, _ ++ _, Set(("", mid())), Set.empty)
+    val leaderDecision = strategy(gather)
+    G[AllocationMap](leader, leaderDecision, identity, metric)
   }
 
   private def S(suitable: Boolean, grain: Double, metric: Metric): Boolean = {
@@ -28,7 +40,7 @@ class LeaderElection extends AggregateProgram
       val leaderSource = (uid == lead) && suitable
 
       // Distance from current device (uid) to the current leader (lead).
-      val dist = G[Double](leaderSource, 0.0, (_: Double) + metric(), metric) // classicGradient(uid == lead)
+      val dist = G(leaderSource, 0.0, (_: Double) + metric(), metric) // classicGradient(uid == lead)
 
       // Initially, current device is candidate, so the distance ('dist')
       // will be 0; the same will be for other devices.
