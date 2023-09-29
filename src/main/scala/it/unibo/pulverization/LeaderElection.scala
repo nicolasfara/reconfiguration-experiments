@@ -3,7 +3,7 @@ package it.unibo.pulverization
 import it.unibo.alchemist.model.scafi.ScafiIncarnationForAlchemist._
 
 class LeaderElection extends AggregateProgram
-  with StandardSensors with ScafiAlchemistSupport with BlockG with BlockC with BlockS with CustomSpawn with FieldUtils {
+  with StandardSensors with ScafiAlchemistSupport with BlockG with BlockC with BlockS with CustomSpawn with FieldUtils with ExplicitFields {
 
   type Ctype = String
   type CID = Int
@@ -56,22 +56,21 @@ class LeaderElection extends AggregateProgram
     } && suitable
   }
 
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   def multiLeader(uid: ID, symmetryBreaker: Int, radius: Double, metric: Metric): ID = {
-    val local = (-symmetryBreaker, -0, 0.0, uid)
-    val worst = (Int.MaxValue, Int.MaxValue, Double.PositiveInfinity, Int.MaxValue)
-    share(local) { (_, rec) =>
-      val (symBrk1, _, d, candidateId) = rec()
-      val dist = d + distanceBetween(mid() == uid, mid() == candidateId, metric)
-      val candidate = mux(dist > radius || uid == candidateId) { worst } { (symBrk1, 0, dist, candidateId) }
-      minHoodLoc(local)(candidate)
+    val local = (-symmetryBreaker, 0.0, uid)
+    val worst = (Int.MaxValue, Double.PositiveInfinity, Int.MaxValue)
+    share(local) { (_, received) =>
+      val msgReceived = includingSelf.reifyField(received())
+      val newDistances = includingSelf.reifyField(metric())
+      val candidacies = msgReceived.map { case (k, v) => k -> (v._1, v._2 + newDistances(k), v._3) }
+        .map { case cand @ (k, (_, d, id)) => if (id == uid || d >= radius) { k -> worst } else { cand } }
+        .values
+        .minOption.getOrElse(worst)
 
-//      val (symBrk1, symBrk2, d, _id) = received()
-//      val updatedDist = foldhood(0.0)(_ + _)(d + metric())
-//      val updatedReceived@(_, _, dist, id) = (symBrk1, symBrk2, updatedDist, _id)
-//      val filtered = mux(id == uid || dist >= radius) { worst } { updatedReceived }
-//      node.put("DEBUG", excludingSelf.reifyField(updatedDist))
-//      Seq(minHood(filtered), local).min
-    }._4
+      val a = Seq(local, candidacies).min
+      node.put("[DEBUG]", a)
+      a
+    }._3
   }
 }
