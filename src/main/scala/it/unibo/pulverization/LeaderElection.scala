@@ -1,6 +1,7 @@
 package it.unibo.pulverization
 
 import it.unibo.alchemist.model.scafi.ScafiIncarnationForAlchemist._
+import Ordering.Implicits._
 
 class LeaderElection extends AggregateProgram
   with StandardSensors with ScafiAlchemistSupport with BlockG with BlockC with BlockS with CustomSpawn with FieldUtils with ExplicitFields {
@@ -14,7 +15,7 @@ class LeaderElection extends AggregateProgram
 //    val allocation = reconfigurationStrategy(3.0, nbrRange _){ _ => Map.empty }
 //    node.put("allocation", allocation)
     val nbrCount = foldhood(0)(_ + _) { nbr(1) }
-    val leaderId = multiLeader(mid(), nbrCount, 13.0, nbrRange _)
+    val leaderId = multiLeader(mid(), mid(), 3.5, nbrRange _)
     node.put("leaderId", leaderId)
     node.put("isLeader", leaderId == mid())
     node.put("leaderEffect", leaderId % 10)
@@ -60,17 +61,18 @@ class LeaderElection extends AggregateProgram
   def multiLeader(uid: ID, symmetryBreaker: Int, radius: Double, metric: Metric): ID = {
     val local = (-symmetryBreaker, 0.0, uid)
     val worst = (Int.MaxValue, Double.PositiveInfinity, Int.MaxValue)
-    share(local) { (_, received) =>
-      val msgReceived = includingSelf.reifyField(received())
-      val newDistances = includingSelf.reifyField(metric())
-      val candidacies = msgReceived.map { case (k, v) => k -> (v._1, v._2 + newDistances(k), v._3) }
-        .map { case cand @ (k, (_, d, id)) => if (id == uid || d >= radius) { k -> worst } else { cand } }
+    val (_, _, leaderId) = share(local) { (_, received) =>
+      val msgReceived = excludingSelf.reifyField(received())
+      val newDistances = excludingSelf.reifyField(metric())
+      val candidacies = msgReceived
+        .map { case (k, (symBrk, d, candId)) => k -> (symBrk, d + newDistances(k), candId) }
+        .map { case cand @ (k, (_, d, candId)) => if (candId == uid || d >= radius) { k -> worst } else { cand } }
         .values
-        .minOption.getOrElse(worst)
+        .minOption
+        .getOrElse(worst)
 
-      val a = Seq(local, candidacies).min
-      node.put("[DEBUG]", a)
-      a
-    }._3
+      local min candidacies
+    }
+    leaderId
   }
 }
