@@ -7,8 +7,9 @@ class MoveOnMostConnected extends AggregateProgram
   override def main() = {
     val isThickHost = node.get[Boolean]("isThickHost")
     val capacity = node.get[Int]("capacity")
+
     val nbc = foldhoodPlus(0)(_ + _) { nbr(1) }
-    val (id, (candidate, _)) = includingSelf.reifyField(nbr((isThickHost, nbc)))
+    val (id, (candidate, _)) = includingSelf.reifyField(nbr { (isThickHost, nbc) })
       .filter { case (_, (isThick, _)) => isThick }
       .maxByOption { case (id, (_, nb)) => (nb, -id) }
       .getOrElse((mid(), (isThickHost, nbc)))

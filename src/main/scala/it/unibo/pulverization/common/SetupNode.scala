@@ -11,7 +11,7 @@ class SetupNode extends AggregateProgram
 //    val isThickHost = isThickHostList.contains(mid())
 //    node.put("isThickHost", isThickHost)
     val neighbours = alchemistEnvironment.getNeighborhood(node.asInstanceOf[SimpleNodeManager[Any]].node).size()
-    node.put("isThickHost", neighbours > 4)
+    node.put("isThickHost", neighbours > 2)
     val isThickHost = node.get[Boolean]("isThickHost")
     val capacities = node.get[List[ID]]("capacities")
     val capacity = capacities(mid())
