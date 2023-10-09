@@ -2,48 +2,30 @@ package it.unibo.pulverization
 
 import it.unibo.alchemist.model.scafi.ScafiIncarnationForAlchemist._
 
-class MoveOnMostConnected extends AggregateProgram with StandardSensors with ScafiAlchemistSupport with FieldUtils with BlockG with BlockS {
+class MoveOnMostConnected extends AggregateProgram
+  with StandardSensors with ScafiAlchemistSupport with FieldUtils with BlockG with BlockS with CustomSpawn {
   override def main() = {
-    node.put("id", mid())
-    val isThickHostList = node.get[List[Int]]("isThickHostList")
-    val isThickHost = isThickHostList.contains(mid())
-    node.put("isThickHost", isThickHost)
+    val isThickHost = node.get[Boolean]("isThickHost")
+    val capacity = node.get[Int]("capacity")
+    val nbc = foldhoodPlus(0)(_ + _) { nbr(1) }
+    val (id, (candidate, _)) = includingSelf.reifyField(nbr((isThickHost, nbc)))
+      .filter { case (_, (isThick, _)) => isThick }
+      .maxByOption { case (id, (_, nb)) => (nb, -id) }
+      .getOrElse((mid(), (isThickHost, nbc)))
 
-    val myCandidateNeighbours = foldhoodPlus(0)(_ + _) {
-      mux(isThickHost) { nbr { 1 } } { nbr { 0 } }
-    }
+    val leader = myGrad[ID](id == mid() && candidate, mid(), identity, nbrRange _)
+    node.put("isLeader", leader == mid())
+    node.put("leaderID", leader)
+    node.put("leaderEffect", leader % 10)
+  }
 
-    node.put("[DEBUG] myCandidateNeighbours", excludingSelf.reifyField(myCandidateNeighbours))
-
-    val (candidateId, size) = includingSelf.reifyField(nbr(myCandidateNeighbours))
-      .maxBy { case (id, size) => (size, id) }
-
-    node.put("[DEBUG] size", size)
-
-    node.put("candidateId", candidateId == mid())
-
-    candidateId
-
-    // ------------------------------
-
-//    val (candidateId, _) = includingSelf.reifyField(nbr(myCandidateNeighbours))
-//      .view.mapValues(_.filter(e => e))
-//      .map { case (id, hostKind) => id -> hostKind.size }
-//      .maxBy { case (id, size) => (size, id) }
-//    candidateId
-
-//    branch(isThinHost) { Option.empty[ID] } {
-//      val myNeighbours = foldhoodPlus(Set.empty[ID])(_ ++ _) {
-//        nbr(Set(mid()))
-//      }
-//      val (candidateId, _) = includingSelf.reifyField(nbr(myNeighbours.size))
-//        .maxBy { case (id, size) => (size, id) }
-//
-//      if (node.get("id") == candidateId) {
-//        node.put("candidateId", candidateId)
-//      }
-//
-//      Option(candidateId)
-//    }
+  def myGrad[V](source: Boolean, field: V, acc: V => V, metric: Metric): V = {
+    share((Double.PositiveInfinity, field)) { (_, f) =>
+      val (dist, value) = f()
+      mux(source) { (0.0, field) } {
+        excludingSelf.minHoodSelector(nbr(dist) + metric())((nbr(dist) + metric(), acc(nbr(value))))
+          .getOrElse((Double.PositiveInfinity, field))
+      }
+    }._2
   }
 }
