@@ -15,6 +15,6 @@ class SetupNode extends AggregateProgram
     val isThickHost = node.get[Boolean]("isThickHost")
     val capacities = node.get[List[ID]]("capacities")
     val capacity = capacities(mid())
-    node.put("capacity", if(isThickHost) 100 - capacity else capacity)
+    node.put("capacity", if (isThickHost) 100 - capacity else capacity)
   }
 }

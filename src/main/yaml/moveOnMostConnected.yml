@@ -48,6 +48,14 @@ _reactions:
           - type: RunScafiProgram
             parameters: [ it.unibo.pulverization.common.SetupNode ]
       - program: send
+  - program: &thickDevice
+      - time-distribution:
+          type: ExponentialTime
+          parameters: [ *programRate ]
+        type: Event
+        actions:
+          - type: RunScafiProgram
+            parameters: [ it.unibo.pulverization.devices.ThickDevice ]
   - program: &program
     - time-distribution:
         type: ExponentialTime
@@ -66,6 +74,7 @@ deployments: ## i.e, how to place nodes
   programs: ## the reactions installed in each node
     - *program
     - *setupDevice
+    - *thickDevice
   contents:
     - molecule: isThickHostList
       concentration: *thickHosts
