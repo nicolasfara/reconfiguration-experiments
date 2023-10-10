@@ -27,10 +27,7 @@ class MoveOnMostConnected extends AggregateProgram
 
     // Take the Thick Host with the highest number of Thick Hosts in its neighborhood,
     // in case of tie, take the Thick Host with the lowest ID. Central node.
-    val (id, (candidate, _)) = includingSelf.reifyField(nbr { (isThickHost, nbrCount) })
-      .filter { case (_, (isThick, _)) => isThick }
-      .maxByOption { case (id, (_, nbrs)) => (nbrs, -id) }
-      .getOrElse((mid(), (isThickHost, nbrCount)))
+    val (id, candidate) = bestCandidateSelection(isThickHost, nbrCount)
 
     val metricValue = if (isThickHost && !candidate) { 0 } else { capacity }
 
@@ -48,5 +45,13 @@ class MoveOnMostConnected extends AggregateProgram
           .getOrElse((Double.PositiveInfinity, field))
       }
     }._2
+  }
+
+  def bestCandidateSelection[V : Ordering](candidate: Boolean, value: V): (ID, Boolean) = {
+    val (id, (isCandidate, _)) = includingSelf.reifyField(nbr { (candidate, value) })
+      .filter { case (_, (isThick, _)) => isThick }
+      .maxByOption { case (id, (_, value)) => (value, -id) }
+      .getOrElse((mid(), (candidate, value)))
+    (id, isCandidate)
   }
 }
