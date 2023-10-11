@@ -2,7 +2,7 @@ package it.unibo.pulverization
 
 import it.unibo.alchemist.model.scafi.ScafiIncarnationForAlchemist._
 
-class MoveOnMostConnected extends AggregateProgram
+class LoadRegions extends AggregateProgram
   with StandardSensors with ScafiAlchemistSupport with FieldUtils with BlockG with BlockS with CustomSpawn {
   /**
    * Main idea of the algorithm:

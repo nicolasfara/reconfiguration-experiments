@@ -63,7 +63,7 @@ _reactions:
       type: Event
       actions:
         - type: RunScafiProgram
-          parameters: [it.unibo.pulverization.MoveOnMostConnected, *retentionTime]
+          parameters: [it.unibo.pulverization.LoadRegions, *retentionTime]
     - program: send
 
 deployments: ## i.e, how to place nodes
