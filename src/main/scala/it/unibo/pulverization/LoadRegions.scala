@@ -21,30 +21,24 @@ class MoveOnMostConnected extends AggregateProgram
    */
   override def main() = {
     val isThickHost = node.get[Boolean]("isThickHost")
-    val capacity = node.get[Int]("capacity")
-
-    val nbrCount = foldhoodPlus(0)(_ + _) { nbr(1) }
+    val load = node.get[Int]("load")
+    val consumption = node.getOrElse[Int]("consumption", 0) // Only on Thin devices
 
     // Take the Thick Host with the highest number of Thick Hosts in its neighborhood,
     // in case of tie, take the Thick Host with the lowest ID. Central node.
+    val nbrCount = foldhoodPlus(0)(_ + _) { nbr(1) }
     val (id, candidate) = bestCandidateSelection(isThickHost, nbrCount)
 
-    val metricValue = if (isThickHost && !candidate) { 0 } else { capacity }
+    val metricValue = (isThickHost, candidate) match {
+      case (true, false) => 0
+      case (true, true) => load
+      case _ => consumption
+    }
 
-    val leader = myGrad[ID](id == mid() && candidate, mid(), identity, () => nbr { metricValue })
+    val leader = G[ID](id == mid() && candidate, mid(), identity, () => nbr(metricValue))
     node.put("isLeader", leader == mid())
     node.put("leaderID", leader)
     node.put("leaderEffect", leader % 10)
-  }
-
-  def myGrad[V](source: Boolean, field: V, acc: V => V, metric: Metric): V = {
-    share((Double.PositiveInfinity, field)) { (_, f) =>
-      val (dist, value) = f()
-      mux(source) { (0.0, field) } {
-        excludingSelf.minHoodSelector(nbr(dist) + metric())((nbr(dist) + metric(), acc(nbr(value))))
-          .getOrElse((Double.PositiveInfinity, field))
-      }
-    }._2
   }
 
   def bestCandidateSelection[V : Ordering](candidate: Boolean, value: V): (ID, Boolean) = {
