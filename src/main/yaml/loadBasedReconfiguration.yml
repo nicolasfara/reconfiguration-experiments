@@ -1,0 +1,74 @@
+incarnation: scafi
+
+variables:
+  random: &random
+    min: 0
+    max: 5
+    step: 1
+    default: 0
+  devices:
+    min: 100
+    max: 200
+    step: 50
+    default: 100
+  leadersCount: &leadersCount
+    min: 5
+    max: 10
+    step: 1
+    default: 5
+  computationalCost: &computationalCost
+    type: ArbitraryVariable
+    parameters: [ 1.5, [ 0.5, 3.0, 10.0 ] ]
+  network:
+    type: ArbitraryVariable
+    parameters:
+      - ["Lobster", 2, 15]
+      - ["BarabasiAlbert", 3]
+  networkConfig: &networkConfig
+    formula: |
+      listOf(devices) + network
+    language: kotlin
+
+_constants:
+  programRate: &programRate 1.0
+  retentionTime: &retentionTime 15.0
+
+seeds:
+  scenario: *random
+  simulation: *random
+
+_reactions:
+  - program: &thickDevice
+      - time-distribution:
+          type: ExponentialTime
+          parameters: [ *programRate ]
+        type: Event
+        actions:
+          - type: RunScafiProgram
+            parameters: [ it.unibo.pulverization.devices.ThickDevice ]
+  - program: &program
+    - time-distribution:
+        type: ExponentialTime
+        parameters: [*programRate]
+      type: Event
+      actions:
+        - type: RunScafiProgram
+          parameters: [it.unibo.pulverization.LoadBasedReconfiguration, *retentionTime]
+    - program: send
+
+deployments: ## i.e, how to place nodes
+  type: GraphStreamDeployment
+  parameters: *networkConfig
+  programs: # the reactions installed in each node
+    - *program
+    - *thickDevice
+
+environment:
+  type: Continuous2DEnvironment
+  parameters: []
+  global-programs:
+    - time-distribution:
+        type: Trigger
+        parameters: [ 0 ]
+      type: ComputeCentrality
+      parameters: [*leadersCount, *computationalCost]
