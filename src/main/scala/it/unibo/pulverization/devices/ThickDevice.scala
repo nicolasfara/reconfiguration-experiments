@@ -6,7 +6,7 @@ class ThickDevice extends AggregateProgram with StandardSensors with ScafiAlchem
   override def main(): Any = {
     val isThickHost = node.get[Boolean]("isThickHost")
     val frame = 80 * randomGen.nextDouble() + 80
-    val newLoad = randomGen.nextInt(100)
+    val newLoad = randomGen.nextDouble() * 100.0
     val currentTime = alchemistEnvironment.getSimulation.getTime.toDouble
     rep(currentTime) { still =>
       if (currentTime - still > frame) {

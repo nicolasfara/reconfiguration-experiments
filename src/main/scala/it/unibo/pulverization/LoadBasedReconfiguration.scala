@@ -26,58 +26,72 @@ class LoadBasedReconfiguration
     */
   override def main() = {
     val isThickHost = node.getOrElse[Boolean]("isThickHost", false)
-    val consumptionCost = node.getOrElse[Double]("computationCost", 0.0)
+    val computationCost = node.getOrElse[Double]("computationCost", 0.0)
     val load = node.getOrElse[Double]("load", 0.0)
-
-    val neighbourConsumptionCost = foldhoodPlus(0.0)(_ + _)(nbr(consumptionCost))
-    val neighboursCount = foldhoodPlus(0)(_ + _)(nbr(1))
-
-    val myMetric = () => mux(isThickHost)(nbr(load))(nbr(consumptionCost))
-
-    val potentialComputation = classicGradient(isThickHost, myMetric)
-
-    // Take the Thick Host with the highest number of Thick Hosts in its neighborhood,
-    // in case of tie, take the Thick Host with the lowest ID. Central node.
-    val nbrCapacity = foldhoodPlus(0.0)(_ + _)(nbr(consumption))
-
-    val (id, candidate) = bestCandidateSelection(isThickHost, nbrCapacity)
     val isLeader = isThickHost // id == mid() && candidate
 
-    val loadMetric = () => nbr(consumption)
+    val myMetric = () => nbr(computationCost)
 
-    // classicGradient(isLeader, loadMetric)
-    val (leaderId, pl) = G[(ID, Double)](isLeader, (mid(), load), { case (id, l) => (id, l + consumption) }, loadMetric)
+    // val potentialComputation = myGrad(isThickHost, 100 - load, myMetric)
+    val inversePotentialComputation = inverseGrad(isLeader, load, myMetric)
+    // node.put("potentialVal", potentialComputation)
+    node.put("inversePotentialVal", inversePotentialComputation)
 
-//    val after = excludingSelf.reifyField(nbr((potential, localCapacity)))
-//      .filter { case (_, (pot, _)) => pot > potential }
-//      .map { case (_, (_, local)) => local }
-//      .sum
-//
-//    val (leaderId, _) = G[(ID, Double)](isLeader, (mid(), amount - nbrCapacity), { case (id, capacity) =>
-//      val newCap = capacity - after
-//      if (newCap > 0) (id, newCap) else (-1, 0.0)
-//    }, loadMetric) // use the right metric
+    val leaderId = Galong(isLeader, inversePotentialComputation, mid(), identity[ID])
+    val leaderIdGraphical = if (inversePotentialComputation.isFinite) leaderId else -1
 
-    node.put("PartLoad", pl)
-    node.put("isLeader", leaderId == mid())
-    node.put("leaderID", leaderId)
-    node.put("leaderEffect", leaderId % 10)
+    node.put("isLeader", leaderId == mid() && isThickHost)
+    node.put("leaderID", leaderIdGraphical)
+    node.put("leaderEffect", leaderIdGraphical % 10)
   }
 
-  def bestCandidateSelection[V: Ordering](
-      candidate: Boolean,
-      value: V
-  ): (ID, Boolean) = {
-    val (id, (isCandidate, _)) = includingSelf
-      .reifyField(nbr((candidate, value)))
-      .filter { case (_, (isThick, _)) => isThick }
-      .maxByOption { case (id, (_, value)) => (value, -id) }
-      .getOrElse((mid(), (candidate, value)))
-    (id, isCandidate)
-  }
+//  def bestCandidateSelection[V: Ordering](
+//      candidate: Boolean,
+//      value: V
+//  ): (ID, Boolean) = {
+//    val (id, (isCandidate, _)) = includingSelf
+//      .reifyField(nbr((candidate, value)))
+//      .filter { case (_, (isThick, _)) => isThick }
+//      .maxByOption { case (id, (_, value)) => (value, -id) }
+//      .getOrElse((mid(), (candidate, value)))
+//    (id, isCandidate)
+//  }
 
-  def myGrad(source: => Boolean, load: Double, metric: Metric): Double =
+//  def myGrad(source: => Boolean, free: Double, metric: Metric): Double =
+//    rep(Double.PositiveInfinity) { d =>
+//      mux(source)(free)(minHoodPlus(nbr(d) + metric()))
+//    }
+
+  def grad(source: => Boolean, load: Double, metric: Metric): Double =
     rep(Double.PositiveInfinity) { d =>
-      mux(source)(load)(minHoodPlus(nbr(d) + metric()))
+      val myNeighbourhood = excludingSelf.reifyField(nbr(d))
+      val afterMe = myNeighbourhood.count(_._2 > d)
+      val adjustment = if (afterMe == 0) 1 else afterMe
+      val potential = minHoodPlus(nbr((d + metric()) / nbr(adjustment)))
+      val bounded = if (potential > metric()) Double.PositiveInfinity else potential
+      mux(source)(load)(bounded)
     }
+
+  def inverseGrad(source: => Boolean, load: Double, metric: Metric): Double =
+    rep(Double.NegativeInfinity) { d =>
+      val myNeighbourhood = excludingSelf.reifyField(nbr(d))
+      val afterMe = myNeighbourhood.count(_._2 < d)
+      val adjustment = if (afterMe == 0) 1 else afterMe
+      val potential = maxHoodPlus(nbr((d - metric()) / nbr(adjustment)))
+      val bounded = if (potential < metric()) Double.NegativeInfinity else potential
+      mux(source)(load)(bounded)
+    }
+
+  def Galong[V](source: Boolean, g: Double, field: V, acc: V => V): V = {
+    rep(field) { case value =>
+      mux(source)(field) {
+        excludingSelf
+          .reifyField((nbr(g), acc(nbr(value))))
+          .values
+          .maxByOption(_._1)
+          .map(_._2)
+          .getOrElse(field)
+      }
+    }
+  }
 }
