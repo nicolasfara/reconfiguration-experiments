@@ -10,6 +10,7 @@ plugins {
     alias(libs.plugins.multiJvmTesting) // Pre-configures the Java toolchains
     alias(libs.plugins.taskTree) // Helps debugging dependencies among gradle tasks
     alias(libs.plugins.kotlin)
+    alias(libs.plugins.kotlinx.serialization)
 }
 
 repositories {
@@ -19,6 +20,8 @@ repositories {
 dependencies {
     // Check the catalog at gradle/libs.versions.gradle
     implementation(libs.bundles.alchemist)
+    implementation(libs.bundles.fuel)
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
 }
 
 multiJvm {

@@ -1,6 +1,7 @@
 [versions]
 alchemist = "28.0.1"
 kotlin = "1.9.0"
+fuel = "2.3.1"
 
 [libraries]
 alchemist = { module = "it.unibo.alchemist:alchemist", version.ref = "alchemist" }
@@ -8,6 +9,9 @@ alchemist-incarnation-scafi = { module = "it.unibo.alchemist:alchemist-incarnati
 alchemist-incarnation-collektive = { module = "it.unibo.collektive:alchemist-incarnation-collektive", version = "0.2.0" }
 alchemist-euclidean-geometry = { module = "it.unibo.alchemist:alchemist-euclidean-geometry", version.ref = "alchemist" }
 alchemist-swingui = { module = "it.unibo.alchemist:alchemist-swingui", version.ref = "alchemist" }
+fuel = { module = "com.github.kittinunf.fuel:fuel", version.ref = "fuel" }
+fuel-serialization = { module = "com.github.kittinunf.fuel:fuel-kotlinx-serialization", version.ref = "fuel" }
+fuel-coroutines = { module = "com.github.kittinunf.fuel:fuel-coroutines", version.ref = "fuel" }
 
 [bundles]
 alchemist = [
@@ -17,8 +21,14 @@ alchemist = [
     "alchemist-euclidean-geometry",
     "alchemist-swingui"
 ]
+fuel = [
+    "fuel",
+    "fuel-serialization",
+    "fuel-coroutines"
+]
 
 [plugins]
 multiJvmTesting = "org.danilopianini.multi-jvm-test-plugin:0.5.5"
 taskTree = "com.dorongold.task-tree:2.1.1"
 kotlin = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlinx-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
