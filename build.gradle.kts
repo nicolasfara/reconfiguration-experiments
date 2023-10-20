@@ -20,7 +20,9 @@ repositories {
 dependencies {
     // Check the catalog at gradle/libs.versions.gradle
     implementation(libs.bundles.alchemist)
-    implementation(libs.bundles.fuel)
+    implementation(libs.bundles.ktor)
+    implementation(libs.bundles.arrow)
+    implementation(libs.kotlinx.dataframe)
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
 }
 

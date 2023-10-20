@@ -1,7 +1,7 @@
 [versions]
 alchemist = "28.0.1"
 kotlin = "1.9.0"
-fuel = "2.3.1"
+ktor = "2.3.5"
 
 [libraries]
 alchemist = { module = "it.unibo.alchemist:alchemist", version.ref = "alchemist" }
@@ -9,9 +9,13 @@ alchemist-incarnation-scafi = { module = "it.unibo.alchemist:alchemist-incarnati
 alchemist-incarnation-collektive = { module = "it.unibo.collektive:alchemist-incarnation-collektive", version = "0.2.0" }
 alchemist-euclidean-geometry = { module = "it.unibo.alchemist:alchemist-euclidean-geometry", version.ref = "alchemist" }
 alchemist-swingui = { module = "it.unibo.alchemist:alchemist-swingui", version.ref = "alchemist" }
-fuel = { module = "com.github.kittinunf.fuel:fuel", version.ref = "fuel" }
-fuel-serialization = { module = "com.github.kittinunf.fuel:fuel-kotlinx-serialization", version.ref = "fuel" }
-fuel-coroutines = { module = "com.github.kittinunf.fuel:fuel-coroutines", version.ref = "fuel" }
+ktor-client = { module = "io.ktor:ktor-client-core", version.ref = "ktor"}
+ktor-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor" }
+ktor-json-serializer = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
+ktor-content-negotiator = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
+arrow = { module = "io.arrow-kt:arrow-core", version = "1.2.0" }
+arrow-coroutines = { module = "io.arrow-kt:arrow-fx-coroutines", version = "1.2.0" }
+kotlinx-dataframe = { module = "org.jetbrains.kotlinx:dataframe", version = "0.12.0" }
 
 [bundles]
 alchemist = [
@@ -21,10 +25,15 @@ alchemist = [
     "alchemist-euclidean-geometry",
     "alchemist-swingui"
 ]
-fuel = [
-    "fuel",
-    "fuel-serialization",
-    "fuel-coroutines"
+ktor = [
+    "ktor-client",
+    "ktor-cio",
+    "ktor-json-serializer",
+    "ktor-content-negotiator"
+]
+arrow = [
+    "arrow",
+    "arrow-coroutines"
 ]
 
 [plugins]
@@ -32,3 +41,4 @@ multiJvmTesting = "org.danilopianini.multi-jvm-test-plugin:0.5.5"
 taskTree = "com.dorongold.task-tree:2.1.1"
 kotlin = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlinx-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+kotlinx-dataframe = { id = "org.jetbrains.kotlinx.dataframe", version = "0.12.0" }
