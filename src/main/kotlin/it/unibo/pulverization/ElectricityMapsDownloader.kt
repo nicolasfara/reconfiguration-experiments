@@ -30,7 +30,7 @@ data class CountryCodeResponse(val zoneName: String = "", val countryName: Strin
 typealias CountryCode = Map<String, CountryCodeResponse>
 
 suspend fun main() {
-    val destinationFolderPath = Path("build/electricityMap")
+    val destinationFolderPath = Path("build/electricityMaps")
     val year = "2022"
     val europeCountryCodes = listOf(
         "AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI", "FR", "DE", "GR", "HU", "IE",
