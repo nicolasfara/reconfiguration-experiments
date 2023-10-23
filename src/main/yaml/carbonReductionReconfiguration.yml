@@ -35,9 +35,8 @@ variables:
   reconfigurationStrategy: &reconfigurationStrategy
     type: ArbitraryVariable
     parameters:
-      - ["it.unibo.pulverization.load.IntermediateLoadBasedReconfiguration", *retentionTime]
-      - ["it.unibo.pulverization.load.SimpleLoadBasedReconfiguration", *retentionTime]
-      - ["it.unibo.pulverization.load.AdvancedLoadBasedReconfiguration", *retentionTime]
+      - ["it.unibo.pulverization.carbon.SimpleCarbonReductionReconfiguration", *retentionTime]
+      - ["it.unibo.pulverization.carbon.AdvancedCarbonReductionReconfiguration", *retentionTime]
 
 seeds:
   scenario: *random
