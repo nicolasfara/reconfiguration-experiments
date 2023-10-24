@@ -60,6 +60,7 @@ File(rootProject.rootDir.path + "/src/main/yaml").listFiles()
                     languageVersion.set(JavaLanguageVersion.of(multiJvm.latestJava))
                 },
             )
+            jvmArgs("-Dsun.java2d.opengl=true")
             // These are the program arguments
             args("run", it.absolutePath, "--override")
             if (System.getenv("CI") == "true" || batch == "true") {
