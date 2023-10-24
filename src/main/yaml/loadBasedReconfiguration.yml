@@ -1,7 +1,6 @@
 incarnation: scafi
 
 _constants:
-  secondsInOneDay: &secondsInOneDay 86400
   exportInterval: &exportInterval 10
   programRate: &programRate 1.0
   retentionTime: &retentionTime 15.0
@@ -22,6 +21,13 @@ variables:
     max: 10
     step: 1
     default: 5
+  simulationSeconds: &simulationSeconds
+    type: ArbitraryVariable
+    parameters:
+      - 3600  # 1h
+      - 21600 # 6h
+      - 43200 # 12h
+      - 86400 # 24h
   computationalCost: &computationalCost
     type: ArbitraryVariable
     parameters: [ 1.0, [ 0.5, 3.0, 10.0 ] ]
@@ -37,9 +43,9 @@ variables:
   reconfigurationStrategy: &reconfigurationStrategy
     type: ArbitraryVariable
     parameters:
+      - ["it.unibo.pulverization.load.AdvancedLoadBasedReconfiguration", *retentionTime]
       - ["it.unibo.pulverization.load.SimpleLoadBasedReconfiguration", *retentionTime]
       - ["it.unibo.pulverization.load.IntermediateLoadBasedReconfiguration", *retentionTime]
-      - ["it.unibo.pulverization.load.AdvancedLoadBasedReconfiguration", *retentionTime]
 
 seeds:
   scenario: *random
@@ -91,16 +97,18 @@ export:
       - type: Time
         parameters:
           precision: 5
-      - molecule: "isThickHost"
-        aggregators: [ sum ]
-      - molecule: "load"
-        aggregators: [ mean ]
       - molecule: "canOffload"
         aggregators: [ sum ]
+        value-filter: onlyfinite
       - molecule: "wantToOffload"
         aggregators: [ sum ]
+        value-filter: onlyfinite
       - molecule: "effectiveLoad"
         aggregators: [ mean, max, min ]
+        value-filter: onlyfinite
+      - molecule: "latency"
+        aggregators: [ mean, max, min ]
+        value-filter: onlyfinite
 terminate:
   - type: AfterTime
-    parameters: [ *secondsInOneDay ]
+    parameters: [ *simulationSeconds ]

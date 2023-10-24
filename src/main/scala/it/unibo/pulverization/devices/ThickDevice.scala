@@ -4,7 +4,7 @@ import it.unibo.alchemist.model.scafi.ScafiIncarnationForAlchemist._
 
 class ThickDevice extends AggregateProgram with StandardSensors with ScafiAlchemistSupport {
   private lazy val maxSystemLoad = 25
-  private lazy val frame = 15
+  private lazy val frame = 60
   private lazy val initialLoad = randomGen.nextDouble() * maxSystemLoad
   private lazy val randomLoadStrategy = (_: Double) => randomGen.nextDouble() * maxSystemLoad
 

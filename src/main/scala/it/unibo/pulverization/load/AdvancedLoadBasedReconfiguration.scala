@@ -34,33 +34,35 @@ class AdvancedLoadBasedReconfiguration
     val potential = Grad(isThickHost, load, myMetric)
     val devicesCovered = C[Double, Set[(Double, ID)]](potential, _ ++ _, Set((computationCost, mid())), Set.empty)
 
-    val candidateDevices = deviceDecisionChoice(devicesCovered, 100.0 - load)
-    val newAdditionalLoad: Double = candidateDevices.toList.map(_._1).sum
-
-    node.put("deviceCovered", devicesCovered)
-    node.put("candidateDevices", candidateDevices.size)
+    val candidateDevices = deviceDecisionChoice(devicesCovered, load)
+    val offloadingLoad: Double = candidateDevices.toList.map(_._1).sum
 
     val (leaderId, canOffloadDevices) =
       G[(ID, Set[(Double, ID)])](isThickHost, (mid(), candidateDevices), identity, myMetric)
     val canOffload = canOffloadDevices.exists { case (_, id) => id == mid() }
 
+    val latency = G[Double](isThickHost, 0.0, _ + nbrRange(), myMetric)
+
+    // METRICS ---------------------------------------------------------------------------------------------------------
     node.put("canOffload", canOffload)
     node.put("wantToOffload", !isThickHost)
-    node.put("canOffloadDevices", canOffloadDevices)
+    node.put("latency", if (canOffload && !isThickHost) latency else Double.NaN)
+    if (isThickHost) { node.put("effectiveLoad", load + offloadingLoad) }
+    // -----------------------------------------------------------------------------------------------------------------
 
-    if (isThickHost) { node.put("effectiveLoad", load + newAdditionalLoad) }
-
+    // GRAPHICAL EFFECTS -----------------------------------------------------------------------------------------------
     node.put("isLeader", isThickHost)
     node.put("leaderID", if (canOffload) leaderId else -1)
     node.put("leaderEffect", leaderId % 10)
+    // -----------------------------------------------------------------------------------------------------------------
   }
 
   private def deviceDecisionChoice(devices: Set[(Double, ID)], load: Double): Set[(Double, ID)] = {
-    var accumulator = 0.0
+    var accumulator = load
     devices.toList
       .sortBy(_._1)
       .takeWhile { case (deviceLoad, _) =>
-        val cond = accumulator + deviceLoad <= load
+        val cond = accumulator + deviceLoad <= 100.0
         accumulator = accumulator + deviceLoad
         cond
       }
