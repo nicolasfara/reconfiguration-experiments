@@ -34,22 +34,21 @@ class AdvancedLoadBasedReconfiguration
     val potential = Grad(isThickHost, load, myMetric)
     val devicesCovered = C[Double, Set[(Double, ID)]](potential, _ ++ _, Set((computationCost, mid())), Set.empty)
 
-    node.put("[potential]", potential)
-    node.put("[free]", 100.0 - load)
-    node.put("[devicesCovered]", devicesCovered.size)
-
     val candidateDevices = deviceDecisionChoice(devicesCovered, 100.0 - load)
     val newAdditionalLoad: Double = candidateDevices.toList.map(_._1).sum
 
     node.put("deviceCovered", devicesCovered)
     node.put("candidateDevices", candidateDevices.size)
-    node.put("effectiveLoad", load + newAdditionalLoad)
 
     val (leaderId, canOffloadDevices) =
       G[(ID, Set[(Double, ID)])](isThickHost, (mid(), candidateDevices), identity, myMetric)
     val canOffload = canOffloadDevices.exists { case (_, id) => id == mid() }
 
+    node.put("canOffload", canOffload)
+    node.put("wantToOffload", !isThickHost)
     node.put("canOffloadDevices", canOffloadDevices)
+
+    if (isThickHost) { node.put("effectiveLoad", load + newAdditionalLoad) }
 
     node.put("isLeader", isThickHost)
     node.put("leaderID", if (canOffload) leaderId else -1)

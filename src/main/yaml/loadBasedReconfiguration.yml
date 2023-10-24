@@ -1,6 +1,8 @@
 incarnation: scafi
 
 _constants:
+  secondsInOneDay: &secondsInOneDay 86400
+  exportInterval: &exportInterval 10
   programRate: &programRate 1.0
   retentionTime: &retentionTime 15.0
 
@@ -35,8 +37,8 @@ variables:
   reconfigurationStrategy: &reconfigurationStrategy
     type: ArbitraryVariable
     parameters:
-      - ["it.unibo.pulverization.load.IntermediateLoadBasedReconfiguration", *retentionTime]
       - ["it.unibo.pulverization.load.SimpleLoadBasedReconfiguration", *retentionTime]
+      - ["it.unibo.pulverization.load.IntermediateLoadBasedReconfiguration", *retentionTime]
       - ["it.unibo.pulverization.load.AdvancedLoadBasedReconfiguration", *retentionTime]
 
 seeds:
@@ -51,7 +53,7 @@ _reactions:
         type: Event
         actions:
           - type: RunScafiProgram
-            parameters: [ it.unibo.pulverization.devices.ThickDevice ]
+            parameters: [ "it.unibo.pulverization.devices.ThickDevice" ]
   - program: &program
     - time-distribution:
         type: ExponentialTime
@@ -78,3 +80,27 @@ environment:
         parameters: [ 0 ]
       type: ComputeCentrality
       parameters: [*leadersCount, *computationalCost]
+
+export:
+  - type: CSVExporter
+    parameters:
+      exportPath: "data"
+      fileNameRoot: "load_based_reconfiguration"
+      interval: *exportInterval
+    data:
+      - type: Time
+        parameters:
+          precision: 5
+      - molecule: "isThickHost"
+        aggregators: [ sum ]
+      - molecule: "load"
+        aggregators: [ mean ]
+      - molecule: "canOffload"
+        aggregators: [ sum ]
+      - molecule: "wantToOffload"
+        aggregators: [ sum ]
+      - molecule: "effectiveLoad"
+        aggregators: [ mean, max, min ]
+terminate:
+  - type: AfterTime
+    parameters: [ *secondsInOneDay ]

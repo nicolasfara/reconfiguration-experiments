@@ -23,6 +23,11 @@ class IntermediateLoadBasedReconfiguration
     val leaderId = Galong(isThickHost, inversePotentialComputation, mid(), identity[ID])
     val leaderIdGraphical = if (inversePotentialComputation.isFinite) leaderId else -1
 
+    val wantToOffload = !isThickHost
+    val canOffload = inversePotentialComputation.isFinite
+    node.put("canOffload", canOffload)
+    node.put("wantToOffload", wantToOffload)
+
     node.put("isLeader", leaderId == mid() && isThickHost)
     node.put("leaderID", leaderIdGraphical)
     node.put("leaderEffect", leaderIdGraphical % 10)
