@@ -23,6 +23,7 @@ dependencies {
     implementation(libs.bundles.ktor)
     implementation(libs.bundles.arrow)
     implementation(libs.kotlinx.dataframe)
+    implementation(libs.kotlinx.kandy)
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
 }
 
