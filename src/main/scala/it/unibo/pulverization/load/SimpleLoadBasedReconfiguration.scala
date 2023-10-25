@@ -34,20 +34,19 @@ class SimpleLoadBasedReconfiguration
         accumulator = accumulator + cost
         condition
       }
-      .toSet
 
-    val offloadingCost = devicesCanOffloading.toList.map(_._2).sum
+    val offloadingLoad = devicesCanOffloading.map(_._2).sum
 
-    val devicesCanOffload = G[Set[ID]](isThickHost, devicesCanOffloading.map(_._1), identity, nbrRange _)
+    val devicesCanOffload = G[List[ID]](isThickHost, devicesCanOffloading.map(_._1), identity, nbrRange _)
     val canOffload = devicesCanOffload.contains(mid())
 
     val latency = classicGradient(isThickHost)
 
     // METRICS ---------------------------------------------------------------------------------------------------------
-    node.put("wantToOffload", !isThickHost)
     node.put("canOffload", canOffload)
-    node.put("effectiveLoad", load + offloadingCost)
+    node.put("wantToOffload", !isThickHost)
     node.put("latency", if (canOffload && !isThickHost) latency else Double.NaN)
+    if (isThickHost) { node.put("effectiveLoad", load + offloadingLoad) }
     // -----------------------------------------------------------------------------------------------------------------
 
     // GRAPHICAL EFFECTS -----------------------------------------------------------------------------------------------

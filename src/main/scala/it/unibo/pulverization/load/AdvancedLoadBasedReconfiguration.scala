@@ -1,6 +1,7 @@
 package it.unibo.pulverization.load
 
 import it.unibo.alchemist.model.scafi.ScafiIncarnationForAlchemist._
+import Builtins._
 
 class AdvancedLoadBasedReconfiguration
     extends AggregateProgram
@@ -32,7 +33,8 @@ class AdvancedLoadBasedReconfiguration
     val myMetric = () => computationCost
 
     val potential = Grad(isThickHost, load, myMetric)
-    val devicesCovered = C[Double, Set[(Double, ID)]](potential, _ ++ _, Set((computationCost, mid())), Set.empty)
+    val devicesCovered =
+      collect[Set[(Double, ID)]](potential, _ ++ _, Set((computationCost, mid())), Set.empty, myMetric)
 
     val candidateDevices = deviceDecisionChoice(devicesCovered, load)
     val offloadingLoad: Double = candidateDevices.toList.map(_._1).sum
@@ -87,4 +89,21 @@ class AdvancedLoadBasedReconfiguration
       mux(source)(leaderValue)(minHoodPlus(nbr(value) + metric()))
     }
   }
+
+  private def collect[V](potential: Double, acc: (V, V) => V, local: V, Null: V, metric: Metric): V =
+    rep(local) { v =>
+      acc(local, foldhood(Null)(acc)(mux(nbr(findParentFix(potential, metric)) == mid())(nbr(v))(nbr(Null))))
+    }
+
+  private def findParentFix(potential: Double, metric: Metric): ID = {
+    val (minPotential, truePotential, devIdWithMinPotential) = excludingSelf
+      .reifyField((nbr(potential) + metric(), nbr(potential), nbr(mid())))
+      .values
+      .minOption
+      .getOrElse((Double.PositiveInfinity, Double.PositiveInfinity, implicitly[Bounded[ID]].top))
+
+    mux(smaller(truePotential, minPotential))(devIdWithMinPotential)(implicitly[Bounded[ID]].top)
+  }
+
+  private def smaller[V: Bounded](a: V, b: V): Boolean = implicitly[Bounded[V]].compare(a, b) < 0
 }

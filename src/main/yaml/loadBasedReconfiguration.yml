@@ -34,8 +34,8 @@ variables:
   network:
     type: ArbitraryVariable
     parameters:
-      - ["Lobster", 2, 15]
-      - ["BarabasiAlbert", 3]
+      - [ "Lobster", 2, 15 ]
+      - [ "BarabasiAlbert", 3 ]
   networkConfig: &networkConfig
     formula: |
       listOf(devices) + network
@@ -43,9 +43,9 @@ variables:
   reconfigurationStrategy: &reconfigurationStrategy
     type: ArbitraryVariable
     parameters:
-      - ["it.unibo.pulverization.load.AdvancedLoadBasedReconfiguration", *retentionTime]
-      - ["it.unibo.pulverization.load.SimpleLoadBasedReconfiguration", *retentionTime]
-      - ["it.unibo.pulverization.load.IntermediateLoadBasedReconfiguration", *retentionTime]
+      - [ "it.unibo.pulverization.load.SimpleLoadBasedReconfiguration", *retentionTime ]
+      - [ "it.unibo.pulverization.load.AdvancedLoadBasedReconfiguration", *retentionTime ]
+      - [ "it.unibo.pulverization.load.IntermediateLoadBasedReconfiguration", *retentionTime ]
 
 seeds:
   scenario: *random
@@ -61,14 +61,14 @@ _reactions:
           - type: RunScafiProgram
             parameters: [ "it.unibo.pulverization.devices.ThickDevice" ]
   - program: &program
-    - time-distribution:
-        type: ExponentialTime
-        parameters: [*programRate]
-      type: Event
-      actions:
-        - type: RunScafiProgram
-          parameters: *reconfigurationStrategy
-    - program: send
+      - time-distribution:
+          type: ExponentialTime
+          parameters: [ *programRate ]
+        type: Event
+        actions:
+          - type: RunScafiProgram
+            parameters: *reconfigurationStrategy
+      - program: send
 
 deployments: ## i.e, how to place nodes
   type: GraphStreamDeployment
@@ -79,13 +79,13 @@ deployments: ## i.e, how to place nodes
 
 environment:
   type: Continuous2DEnvironment
-  parameters: []
+  parameters: [ ]
   global-programs:
     - time-distribution:
         type: Trigger
         parameters: [ 0 ]
       type: ComputeCentrality
-      parameters: [*leadersCount, *computationalCost]
+      parameters: [ *leadersCount, *computationalCost ]
 
 export:
   - type: CSVExporter
