@@ -10,5 +10,5 @@ class SimpleCarbonReductionReconfiguration
     with BlockG
     with BlockC
     with CustomSpawn {
-  override def main(): Any = ???
+  override def main(): Any = {}
 }
