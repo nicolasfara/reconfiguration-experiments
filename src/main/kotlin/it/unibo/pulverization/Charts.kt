@@ -1,3 +1,5 @@
+@file:Suppress("DestructuringDeclarationWithTooManyEntries")
+
 package it.unibo.pulverization
 
 import org.jetbrains.kotlinx.dataframe.DataFrame
@@ -13,6 +15,7 @@ import org.jetbrains.kotlinx.kandy.dsl.plot
 import org.jetbrains.kotlinx.kandy.letsplot.export.save
 import org.jetbrains.kotlinx.kandy.letsplot.layers.line
 import org.jetbrains.kotlinx.kandy.letsplot.layout
+import org.jetbrains.kotlinx.kandy.letsplot.x
 import org.jetbrains.kotlinx.kandy.util.color.Color
 import java.nio.file.Files
 import java.nio.file.Path
@@ -22,6 +25,8 @@ import kotlin.io.path.absolutePathString
 import kotlin.io.path.listDirectoryEntries
 import kotlin.io.path.name
 import kotlin.io.path.readLines
+
+data class Scenario(val dataframe: DataFrame<*>, val devices: String, val load: String, val scenario: String)
 
 fun main() {
     val dataPath = Path("data")
@@ -49,26 +54,31 @@ fun main() {
         .map { removeHeaderFromCsvFile(it) }
         .map {
             val scenarioRegex = Regex("it.unibo.pulverization.load.(.+),+")
+            val devicesRegex = Regex(".+devices-(\\d+\\.\\d)")
             val scenario = scenarioRegex.find(it.name)!!.groupValues[1]
-            DataFrame.readCSV(it.toFile(), delimiter = ' ', header = header, colTypes = colTypes) to scenario
+            val devices = devicesRegex.find(it.name)!!.groupValues[1]
+            val loadRegex = Regex(".+computationalCost-(\\d+\\.\\d)")
+            val load = loadRegex.find(it.name)!!.groupValues[1]
+            val df = DataFrame.readCSV(it.toFile(), delimiter = ' ', header = header, colTypes = colTypes)
+            Scenario(df, devices, load, scenario)
         }.toList()
 
-    val qosDataframe = dataframes.fold(emptyDataFrame<Any>()) { acc, (df, name) ->
-        val data = df["time", "canOffload[sum]", "wantToOffload[sum]"].dropNA(whereAllNA = true)
-        val offloadingCol = data.mapToColumn("offloadingQoS-$name") {
+    val qosDataframe = dataframes.fold(emptyDataFrame<Any>()) { acc, (df, devices, load, name) ->
+        val data = df["time", "canOffload[sum]", "wantToOffload[sum]"]
+        val offloadingCol = data.mapToColumn("offloadingQoS[$devices, $load, $name]") {
             runCatching { "canOffload[sum]"<Int>() / "wantToOffload[sum]"<Int>().toDouble() }
                 .getOrElse { Double.NaN }
         }
         val newDf = if (!acc.containsColumn("time")) acc.add(data["time"]) else acc
         newDf.add(offloadingCol)
-    }
-    val latencyDataFrame = dataframes.fold(emptyDataFrame<Any>()) { acc, (df, name) ->
-        val latencyCol = df["latency[mean]"].rename("latency-$name")
+    }.dropNA()
+    val latencyDataFrame = dataframes.fold(emptyDataFrame<Any>()) { acc, (df, devices, load, name) ->
+        val latencyCol = df["latency[mean]"].rename("latency[$devices, $load, $name]")
         val newDf = if (!acc.containsColumn("time")) acc.add(df["time"]) else acc
         newDf.add(latencyCol)
     }.dropNA()
-    val effectiveLoadMean = dataframes.fold(emptyDataFrame<Any>()) { acc, (df, name) ->
-        val effectiveLoadCol = df["effectiveLoad[mean]"].rename("effectiveLoadMean-$name")
+    val effectiveLoadMean = dataframes.fold(emptyDataFrame<Any>()) { acc, (df, devices, load, name) ->
+        val effectiveLoadCol = df["effectiveLoad[mean]"].rename("effectiveLoadMean[$devices, $load, $name]")
         val newDf = if (!acc.containsColumn("time")) acc.add(df["time"]) else acc
         newDf.add(effectiveLoadCol)
     }.dropNA()
@@ -79,23 +89,21 @@ fun main() {
 
     // Plotting ---------------------------------------------------------------------------------------------
 
+    val colors = listOf(Color.ORANGE, Color.LIGHT_BLUE, Color.GREEN, Color.PURPLE, Color.YELLOW)
+
     plot(qosDataframe) {
         layout {
             title = "Offloading QoS"
             xAxisLabel = "Time (s)"
             yAxisLabel = "Offloading QoS"
         }
-        line {
-            x("time"<Double>())
-            y("offloadingQoS-SimpleLoadBasedReconfiguration"<Double>())
-            width = 1.0
-            color = Color.ORANGE
-        }
-        line {
-            x("time"<Double>())
-            y("offloadingQoS-AdvancedLoadBasedReconfiguration"<Double>())
-            width = 1.25
-            color = Color.LIGHT_BLUE
+        x("time"<Double>())
+        qosDataframe.columnNames().filter { it != "time" }.zip(colors).forEach { (col, clr) ->
+            line {
+                y(col<Double>())
+                width = 1.0
+                color = clr
+            }
         }
     }.save("offloading_qos.html", path = chartsPath.absolutePathString())
 
@@ -105,17 +113,13 @@ fun main() {
             xAxisLabel = "Time (s)"
             yAxisLabel = "Latency (ms)"
         }
-        line {
-            x("time"<Double>())
-            y("latency-SimpleLoadBasedReconfiguration"<Double>())
-            width = 1.0
-            color = Color.ORANGE
-        }
-        line {
-            x("time"<Double>())
-            y("latency-AdvancedLoadBasedReconfiguration"<Double>())
-            width = 1.25
-            color = Color.LIGHT_BLUE
+        x("time"<Double>())
+        latencyDataFrame.columnNames().filter { it != "time" }.zip(colors).forEach { (col, clr) ->
+            line {
+                y(col<Double>())
+                width = 1.0
+                color = clr
+            }
         }
     }.save("latencies.html", path = chartsPath.absolutePathString())
 
@@ -125,17 +129,13 @@ fun main() {
             xAxisLabel = "Time (s)"
             yAxisLabel = "Effective load"
         }
-        line {
-            x("time"<Double>())
-            y("effectiveLoadMean-SimpleLoadBasedReconfiguration"<Double>())
-            width = 1.0
-            color = Color.ORANGE
-        }
-        line {
-            x("time"<Double>())
-            y("effectiveLoadMean-AdvancedLoadBasedReconfiguration"<Double>())
-            width = 1.25
-            color = Color.LIGHT_BLUE
+        x("time"<Double>())
+        effectiveLoadMean.columnNames().filter { it != "time" }.zip(colors).forEach { (col, clr) ->
+            line {
+                y(col<Double>())
+                width = 1.0
+                color = clr
+            }
         }
     }.save("effective_load_mean.html", path = chartsPath.absolutePathString())
 }
