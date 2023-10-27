@@ -57,7 +57,7 @@ fun main() {
             val devicesRegex = Regex(".+devices-(\\d+\\.\\d)")
             val scenario = scenarioRegex.find(it.name)!!.groupValues[1]
             val devices = devicesRegex.find(it.name)!!.groupValues[1]
-            val loadRegex = Regex(".+computationalCost-(\\d+\\.\\d)")
+            val loadRegex = Regex(".+cost-(\\d+\\.\\d)")
             val load = loadRegex.find(it.name)!!.groupValues[1]
             val df = DataFrame.readCSV(it.toFile(), delimiter = ' ', header = header, colTypes = colTypes)
             Scenario(df, devices, load, scenario)
