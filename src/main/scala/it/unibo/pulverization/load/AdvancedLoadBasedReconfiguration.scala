@@ -46,8 +46,8 @@ class AdvancedLoadBasedReconfiguration
     val latency = G[Double](isThickHost, 0.0, _ + nbrRange(), myMetric)
 
     // METRICS ---------------------------------------------------------------------------------------------------------
-    node.put("canOffload", canOffload)
-    node.put("wantToOffload", !isThickHost)
+    if (!isThickHost) { node.put("canOffload", canOffload) }
+    if (!isThickHost) { node.put("wantToOffload", true) }
     node.put("latency", if (canOffload && !isThickHost) latency else Double.NaN)
     if (isThickHost) { node.put("effectiveLoad", load + offloadingLoad) }
     // -----------------------------------------------------------------------------------------------------------------
