@@ -2,6 +2,7 @@ package it.unibo.pulverization.load
 
 import it.unibo.alchemist.model.scafi.ScafiIncarnationForAlchemist._
 import Builtins._
+import it.unibo.pulverization.load.strategies.OffloadingStrategies._
 
 class AdvancedLoadBasedReconfiguration
     extends AggregateProgram
@@ -29,6 +30,7 @@ class AdvancedLoadBasedReconfiguration
     val isThickHost = node.getOrElse[Boolean]("isThickHost", false)
     val computationCost = node.getOrElse[Double]("computationCost", 0.0)
     val load = node.getOrElse[Double]("load", 0.0)
+    val deviceChoiceStrategy = node.getOrElse[Int]("deviceChoiceStrategy", 1)
 
     val myMetric = () => computationCost
 
@@ -36,11 +38,17 @@ class AdvancedLoadBasedReconfiguration
     val devicesCovered =
       collect[Set[(Double, ID)]](potential, _ ++ _, Set((computationCost, mid())), Set.empty, myMetric)
 
-    val candidateDevices = deviceDecisionChoice(devicesCovered, load)
-    val offloadingLoad: Double = candidateDevices.toList.map(_._1).sum
+    val devicesCanOffloading = deviceChoiceStrategy match {
+      case 1 => randomDecisionChoice(devicesCovered, load)(this)
+      case 2 => lowLoadDeviceDecisionChoice(devicesCovered, load)
+      case 3 => highLoadDeviceDecisionChoice(devicesCovered, load)
+      case _ => throw new IllegalStateException("Device selection strategy not handled")
+    }
+
+    val offloadingLoad: Double = devicesCanOffloading.toList.map(_._1).sum
 
     val (leaderId, canOffloadDevices) =
-      G[(ID, Set[(Double, ID)])](isThickHost, (mid(), candidateDevices), identity, myMetric)
+      G[(ID, Set[(Double, ID)])](isThickHost, (mid(), devicesCanOffloading), identity, myMetric)
     val canOffload = canOffloadDevices.exists { case (_, id) => id == mid() }
 
     val latency = G[Double](isThickHost, 0.0, _ + nbrRange(), myMetric)
@@ -57,18 +65,6 @@ class AdvancedLoadBasedReconfiguration
     node.put("leaderID", if (canOffload) leaderId else -1)
     node.put("leaderEffect", leaderId % 10)
     // -----------------------------------------------------------------------------------------------------------------
-  }
-
-  private def deviceDecisionChoice(devices: Set[(Double, ID)], load: Double): Set[(Double, ID)] = {
-    var accumulator = load
-    devices.toList
-      .sortBy(_._1)
-      .takeWhile { case (deviceLoad, _) =>
-        val cond = accumulator + deviceLoad <= 100.0
-        accumulator = accumulator + deviceLoad
-        cond
-      }
-      .toSet
   }
 
   override def G[V](source: Boolean, field: V, acc: V => V, metric: () => Double): V = {

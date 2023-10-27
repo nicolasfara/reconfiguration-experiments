@@ -2,6 +2,7 @@ package it.unibo.pulverization.load
 
 import it.unibo.alchemist.model.scafi.ScafiIncarnationForAlchemist._
 import Builtins._
+import it.unibo.pulverization.load.strategies.OffloadingStrategies._
 
 class SimpleLoadBasedReconfiguration
     extends AggregateProgram
@@ -19,25 +20,24 @@ class SimpleLoadBasedReconfiguration
     val isThickHost = node.getOrElse[Boolean]("isThickHost", false)
     val computationalCost = node.getOrElse[Double]("computationCost", 0.0)
     val load = node.getOrElse[Double]("load", 0.0)
+    val deviceChoiceStrategy = node.getOrElse[Int]("deviceChoiceStrategy", 1)
 
     val potential = classicGradient(isThickHost)
     val leaderId = G[ID](isThickHost, mid(), identity, nbrRange _)
 
-    val devicesWantOffloading =
-      collect[Set[(ID, Double)]](potential, _ ++ _, Set((mid(), computationalCost)), Set.empty, nbrRange _)
+    val devicesCovered =
+      collect[Set[(Double, ID)]](potential, _ ++ _, Set((computationalCost, mid())), Set.empty, nbrRange _)
 
-    var accumulator = load
-    val devicesCanOffloading = devicesWantOffloading.toList
-      .sortBy(_._2)
-      .takeWhile { case (_, cost) =>
-        val condition = accumulator + cost <= 100.0
-        accumulator = accumulator + cost
-        condition
-      }
+    val devicesCanOffloading = deviceChoiceStrategy match {
+      case 1 => randomDecisionChoice(devicesCovered, load)(this)
+      case 2 => lowLoadDeviceDecisionChoice(devicesCovered, load)
+      case 3 => highLoadDeviceDecisionChoice(devicesCovered, load)
+      case _ => throw new IllegalStateException("Device selection strategy not handled")
+    }
 
-    val offloadingLoad = devicesCanOffloading.map(_._2).sum
+    val offloadingLoad = devicesCanOffloading.toList.map(_._1).sum
 
-    val devicesCanOffload = G[List[ID]](isThickHost, devicesCanOffloading.map(_._1), identity, nbrRange _)
+    val devicesCanOffload = G[Set[ID]](isThickHost, devicesCanOffloading.map(_._2), identity, nbrRange _)
     val canOffload = devicesCanOffload.contains(mid())
 
     val latency = classicGradient(isThickHost)
