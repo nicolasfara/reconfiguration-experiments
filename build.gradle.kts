@@ -42,6 +42,28 @@ val runAll by tasks.register<DefaultTask>("runAll") {
     group = alchemistGroup
     description = "Launches all simulations"
 }
+
+val ciAlchemistConfiguration = """
+    terminate:
+      - type: AfterTime
+        parameters: $maxTime
+""".trimIndent()
+
+val batchAlchemistConfiguration = """
+    launcher:
+      type: HeadlessSimulationLauncher
+      parameters:
+        parallelism: ${Runtime.getRuntime().availableProcessors() - 1}
+        variables: [random, network, deviceChoiceStrategy, computationalCost]
+""".trimIndent()
+
+fun graphicsAlchemistConfiguration(effectName: String) = """
+    launcher:
+      type: SingleRunSwingUI
+      parameters:
+        graphics: effects/$effectName.json
+""".trimIndent()
+
 /*
  * Scan the folder with the simulation files, and create a task for each one of them.
  */
@@ -64,27 +86,16 @@ File(rootProject.rootDir.path + "/src/main/yaml").listFiles()
             jvmArgs("-Dsun.java2d.opengl=true")
             // These are the program arguments
             args("run", it.absolutePath, "--override")
-            if (System.getenv("CI") == "true" || batch == "true") {
+            when {
                 // If it is running in a Continuous Integration environment, use the "headless" mode of the simulator
                 // Namely, force the simulator not to use graphical output.
-                args(
-                    """
-                        terminate:
-                        - type: AfterTime
-                          parameters: $maxTime
-                    """.trimIndent(),
-                )
-            } else {
+                System.getenv("CI") == "true" -> args(ciAlchemistConfiguration)
+                // If it is running in batch mode, use the "headless" mode of the simulator with the variables specified
+                // in the 'batchAlchemistConfiguration'
+                batch == "true" -> args(batchAlchemistConfiguration)
                 // A graphics environment should be available, so load the effects for the UI from the "effects" folder
                 // Effects are expected to be named after the simulation file
-                args(
-                    """
-                        launcher:
-                          type: SingleRunSwingUI
-                          parameters:
-                            graphics: effects/${it.nameWithoutExtension}.json
-                    """,
-                )
+                else -> args(graphicsAlchemistConfiguration(it.nameWithoutExtension))
             }
         }
         // task.dependsOn(classpathJar) // Uncomment to switch to jar-based classpath resolution
