@@ -42,4 +42,4 @@ multiJvmTesting = "org.danilopianini.multi-jvm-test-plugin:0.5.5"
 taskTree = "com.dorongold.task-tree:2.1.1"
 kotlin = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlinx-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
-kotlinx-dataframe = { id = "org.jetbrains.kotlinx.dataframe", version = "0.12.0" }
+kotlinx-dataframe = { id = "org.jetbrains.kotlinx.dataframe", version = "1548" }
