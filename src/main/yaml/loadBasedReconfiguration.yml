@@ -17,12 +17,19 @@ variables:
     max: 200
     step: 50
     default: 100
-  leadersCount: &leadersCount
+  leaders: &leadersCount
     min: 5
     max: 10
     step: 1
     default: 5
-  computationalCost: &computationalCost
+  simTime: &simulationSeconds
+    type: ArbitraryVariable
+    parameters:
+      - 3600  # 1h
+      - 21600 # 6h
+      - 43200 # 12h
+      - 86400 # 24h
+  cost: &computationalCost
     type: ArbitraryVariable
     parameters: [ 1.0, [ 1.0, 3.0, 10.0 ] ]
   network:
@@ -40,7 +47,7 @@ variables:
       - 1
       - 2
       - 3
-  reconfigurationStrategy: &reconfigurationStrategy
+  reconfigStrategy: &reconfigurationStrategy
     type: ArbitraryVariable
     parameters:
       - [ "it.unibo.pulverization.load.AdvancedLoadBasedReconfiguration", *retentionTime ]
@@ -75,6 +82,9 @@ deployments: ## i.e, how to place nodes
   programs: # the reactions installed in each node
     - *program
     - *thickDevice
+  contents:
+    - molecule: "deviceChoiceStrategy"
+      concentration: *deviceChoiceStrategy
 
 environment:
   type: Continuous2DEnvironment
