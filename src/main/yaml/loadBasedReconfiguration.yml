@@ -95,9 +95,6 @@ environment:
         parameters: [ 0 ]
       type: ComputeCentrality
       parameters: [ *leadersCount, *computationalCost ]
-  contents:
-    - molecule: deviceChoiceStrategy
-      concentration: *deviceChoiceStrategy
 
 export:
   - type: CSVExporter
