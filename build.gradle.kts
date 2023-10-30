@@ -54,7 +54,7 @@ val batchAlchemistConfiguration = """
       type: HeadlessSimulationLauncher
       parameters:
         parallelism: ${Runtime.getRuntime().availableProcessors() - 1}
-        variables: [random, network, deviceChoiceStrategy, cost]
+        variables: [random, deviceChoiceStrategy, computationalCost, devices]
 """.trimIndent()
 
 fun graphicsAlchemistConfiguration(effectName: String) = """
@@ -101,6 +101,15 @@ File(rootProject.rootDir.path + "/src/main/yaml").listFiles()
         // task.dependsOn(classpathJar) // Uncomment to switch to jar-based classpath resolution
         runAll.dependsOn(task)
     }
+
+val runAllLoadBased by tasks.register<DefaultTask>("runAllLoadBased") {
+    group = alchemistGroup
+    description = "Launches all load-based simulations"
+
+    tasks.filter { it.name.startsWith("runLoadBased") }.forEach {
+        dependsOn(it)
+    }
+}
 
 tasks.withType<Tar>().configureEach {
     duplicatesStrategy = DuplicatesStrategy.WARN

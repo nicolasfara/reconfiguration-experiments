@@ -12,7 +12,7 @@ variables:
     max: 5
     step: 1
     default: 0
-  devices:
+  devices: &devices
     min: 100
     max: 200
     step: 50
@@ -22,36 +22,12 @@ variables:
     max: 10
     step: 1
     default: 5
-  simTime: &simulationSeconds
-    type: ArbitraryVariable
-    parameters:
-      - 3600  # 1h
-      - [ 3600, 21600, 43200, 86400 ]
-  cost: &computationalCost
+  computationalCost: &computationalCost
     type: ArbitraryVariable
     parameters: [ 1.0, [ 1.0, 3.0, 10.0 ] ]
-  network:
-    type: ArbitraryVariable
-    parameters: [
-      [ "Lobster", 2, 15 ],
-      [ [ "Lobster", 2, 15 ], [ "BarabasiAlbert", 3 ] ]
-    ]
-  networkConfig: &networkConfig
-    formula: |
-      listOf(devices) + network
-    language: kotlin
   deviceChoiceStrategy: &deviceChoiceStrategy
     type: ArbitraryVariable
     parameters: [ "\"random\"", [ "\"random\"", "\"highFirst\"", "\"lowFirst\"" ] ]
-  reconfigStrategy: &reconfigurationStrategy
-    type: ArbitraryVariable
-    parameters: [
-      [ "it.unibo.pulverization.load.AdvancedLoadBasedReconfiguration", *retentionTime ],
-      [
-        [ "it.unibo.pulverization.load.SimpleLoadBasedReconfiguration", *retentionTime ],
-        [ "it.unibo.pulverization.load.AdvancedLoadBasedReconfiguration", *retentionTime ],
-      ]
-    ]
 
 seeds:
   scenario: *random
@@ -73,12 +49,12 @@ _reactions:
         type: Event
         actions:
           - type: RunScafiProgram
-            parameters: *reconfigurationStrategy
+            parameters: [ "it.unibo.pulverization.load.SimpleLoadBasedReconfiguration", *retentionTime ]
       - program: send
 
 deployments: ## i.e, how to place nodes
   type: GraphStreamDeployment
-  parameters: *networkConfig
+  parameters: [*devices, "Barabasi", 3 ]
   programs: # the reactions installed in each node
     - *program
     - *thickDevice
@@ -99,7 +75,7 @@ environment:
 export:
   - type: CSVExporter
     parameters:
-      exportPath: "data"
+      exportPath: "data/simple-barabasi"
       fileNameRoot: "load_based_reconfiguration"
       interval: *exportInterval
     data:

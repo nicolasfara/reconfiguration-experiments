@@ -1,0 +1,99 @@
+incarnation: scafi
+
+_constants:
+  exportInterval: &exportInterval 10
+  programRate: &programRate 1.0
+  retentionTime: &retentionTime 15.0
+  simulationSeconds: &simulationSeconds 3600
+
+variables:
+  random: &random
+    min: 0
+    max: 5
+    step: 1
+    default: 0
+  devices: &devices
+    min: 100
+    max: 200
+    step: 50
+    default: 100
+  leaders: &leadersCount
+    min: 5
+    max: 10
+    step: 1
+    default: 5
+  computationalCost: &computationalCost
+    type: ArbitraryVariable
+    parameters: [ 1.0, [ 1.0, 3.0, 10.0 ] ]
+  deviceChoiceStrategy: &deviceChoiceStrategy
+    type: ArbitraryVariable
+    parameters: [ "\"random\"", [ "\"random\"", "\"highFirst\"", "\"lowFirst\"" ] ]
+
+seeds:
+  scenario: *random
+  simulation: *random
+
+_reactions:
+  - program: &thickDevice
+      - time-distribution:
+          type: ExponentialTime
+          parameters: [ *programRate ]
+        type: Event
+        actions:
+          - type: RunScafiProgram
+            parameters: [ "it.unibo.pulverization.devices.ThickDevice" ]
+  - program: &program
+      - time-distribution:
+          type: ExponentialTime
+          parameters: [ *programRate ]
+        type: Event
+        actions:
+          - type: RunScafiProgram
+            parameters: [ "it.unibo.pulverization.load.AdvancedLoadBasedReconfiguration", *retentionTime ]
+      - program: send
+
+deployments: ## i.e, how to place nodes
+  type: GraphStreamDeployment
+  parameters: [*devices, "BarabasiAlbert", 3 ]
+  programs: # the reactions installed in each node
+    - *program
+    - *thickDevice
+  contents:
+    - molecule: "deviceChoiceStrategy"
+      concentration: *deviceChoiceStrategy
+
+environment:
+  type: Continuous2DEnvironment
+  parameters: [ ]
+  global-programs:
+    - time-distribution:
+        type: Trigger
+        parameters: [ 0 ]
+      type: ComputeCentrality
+      parameters: [ *leadersCount, *computationalCost ]
+
+export:
+  - type: CSVExporter
+    parameters:
+      exportPath: "data/advanced-barabasi"
+      fileNameRoot: "load_based_reconfiguration"
+      interval: *exportInterval
+    data:
+      - type: Time
+        parameters:
+          precision: 5
+      - molecule: "canOffload"
+        aggregators: [ sum ]
+        value-filter: onlyfinite
+      - molecule: "wantToOffload"
+        aggregators: [ sum ]
+        value-filter: onlyfinite
+      - molecule: "effectiveLoad"
+        aggregators: [ mean, max, min ]
+        value-filter: onlyfinite
+      - molecule: "latency"
+        aggregators: [ mean, max, min ]
+        value-filter: onlyfinite
+terminate:
+  - type: AfterTime
+    parameters: [ *simulationSeconds ]
