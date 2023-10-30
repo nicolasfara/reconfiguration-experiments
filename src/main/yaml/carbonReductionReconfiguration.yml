@@ -3,6 +3,7 @@ incarnation: scafi
 _constants:
   programRate: &programRate 1.0
   retentionTime: &retentionTime 15.0
+  simulationSeconds: &simulationSeconds 3600
 
 variables:
   random: &random
@@ -77,3 +78,7 @@ environment:
         parameters: [ 0 ]
       type: ComputeCentrality
       parameters: [*leadersCount, *computationalCost]
+
+terminate:
+  - type: AfterTime
+    parameters: [ *simulationSeconds ]

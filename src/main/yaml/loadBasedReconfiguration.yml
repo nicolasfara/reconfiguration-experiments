@@ -4,6 +4,7 @@ _constants:
   exportInterval: &exportInterval 10
   programRate: &programRate 1.0
   retentionTime: &retentionTime 15.0
+  simulationSeconds: &simulationSeconds 3600
 
 variables:
   random: &random
@@ -21,16 +22,9 @@ variables:
     max: 10
     step: 1
     default: 5
-  simulationSeconds: &simulationSeconds
-    type: ArbitraryVariable
-    parameters:
-      - 3600  # 1h
-      - 21600 # 6h
-      - 43200 # 12h
-      - 86400 # 24h
   computationalCost: &computationalCost
     type: ArbitraryVariable
-    parameters: [ 1.0, [ 0.5, 3.0, 10.0 ] ]
+    parameters: [ 1.0, [ 1.0, 3.0, 10.0 ] ]
   network:
     type: ArbitraryVariable
     parameters:
@@ -40,12 +34,17 @@ variables:
     formula: |
       listOf(devices) + network
     language: kotlin
+  deviceChoiceStrategy: &deviceChoiceStrategy
+    type: ArbitraryVariable
+    parameters:
+      - 1
+      - 2
+      - 3
   reconfigurationStrategy: &reconfigurationStrategy
     type: ArbitraryVariable
     parameters:
-      - [ "it.unibo.pulverization.load.SimpleLoadBasedReconfiguration", *retentionTime ]
       - [ "it.unibo.pulverization.load.AdvancedLoadBasedReconfiguration", *retentionTime ]
-      - [ "it.unibo.pulverization.load.IntermediateLoadBasedReconfiguration", *retentionTime ]
+      - [ "it.unibo.pulverization.load.SimpleLoadBasedReconfiguration", *retentionTime ]
 
 seeds:
   scenario: *random
@@ -86,6 +85,9 @@ environment:
         parameters: [ 0 ]
       type: ComputeCentrality
       parameters: [ *leadersCount, *computationalCost ]
+  contents:
+    - molecule: deviceChoiceStrategy
+      concentration: *deviceChoiceStrategy
 
 export:
   - type: CSVExporter
