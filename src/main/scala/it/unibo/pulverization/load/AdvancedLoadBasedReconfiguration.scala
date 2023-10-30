@@ -30,7 +30,7 @@ class AdvancedLoadBasedReconfiguration
     val isThickHost = node.getOrElse[Boolean]("isThickHost", false)
     val computationCost = node.getOrElse[Double]("computationCost", 0.0)
     val load = node.getOrElse[Double]("load", 0.0)
-    val deviceChoiceStrategy = node.getOrElse[Int]("deviceChoiceStrategy", 1)
+    val deviceChoiceStrategy = node.getOrElse[String]("deviceChoiceStrategy", "random")
 
     val myMetric = () => computationCost
 
@@ -39,9 +39,9 @@ class AdvancedLoadBasedReconfiguration
       collect[Set[(Double, ID)]](potential, _ ++ _, Set((computationCost, mid())), Set.empty, myMetric)
 
     val devicesCanOffloading = deviceChoiceStrategy match {
-      case 1 => randomDecisionChoice(devicesCovered, load)(this)
-      case 2 => lowLoadDeviceDecisionChoice(devicesCovered, load)
-      case 3 => highLoadDeviceDecisionChoice(devicesCovered, load)
+      case "random" => randomDecisionChoice(devicesCovered, load)(this)
+      case "lowFirst" => lowLoadDeviceDecisionChoice(devicesCovered, load)
+      case "highFirst" => highLoadDeviceDecisionChoice(devicesCovered, load)
       case _ => throw new IllegalStateException("Device selection strategy not handled")
     }
 

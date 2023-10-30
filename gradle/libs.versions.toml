@@ -9,7 +9,7 @@ alchemist-incarnation-scafi = { module = "it.unibo.alchemist:alchemist-incarnati
 alchemist-incarnation-collektive = { module = "it.unibo.collektive:alchemist-incarnation-collektive", version = "0.3.0" }
 alchemist-euclidean-geometry = { module = "it.unibo.alchemist:alchemist-euclidean-geometry", version.ref = "alchemist" }
 alchemist-swingui = { module = "it.unibo.alchemist:alchemist-swingui", version.ref = "alchemist" }
-ktor-client = { module = "io.ktor:ktor-client-core", version.ref = "ktor"}
+ktor-client = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 ktor-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor" }
 ktor-json-serializer = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
 ktor-content-negotiator = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }

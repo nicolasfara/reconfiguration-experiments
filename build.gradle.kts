@@ -54,7 +54,7 @@ val batchAlchemistConfiguration = """
       type: HeadlessSimulationLauncher
       parameters:
         parallelism: ${Runtime.getRuntime().availableProcessors() - 1}
-        variables: [random, network, deviceChoiceStrategy, computationalCost]
+        variables: [random, network, deviceChoiceStrategy, cost]
 """.trimIndent()
 
 fun graphicsAlchemistConfiguration(effectName: String) = """
