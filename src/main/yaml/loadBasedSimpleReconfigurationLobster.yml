@@ -54,7 +54,7 @@ _reactions:
 
 deployments: ## i.e, how to place nodes
   type: GraphStreamDeployment
-  parameters: [*devices, "Lobster", 2, 15 ]
+  parameters: [ *devices, "Lobster", 2, 15 ]
   programs: # the reactions installed in each node
     - *program
     - *thickDevice
@@ -75,8 +75,8 @@ environment:
 export:
   - type: CSVExporter
     parameters:
-      exportPath: "data/simple-lobster"
-      fileNameRoot: "load_based_reconfiguration"
+      exportPath: "data"
+      fileNameRoot: "load_based_simple_lobster"
       interval: *exportInterval
     data:
       - type: Time

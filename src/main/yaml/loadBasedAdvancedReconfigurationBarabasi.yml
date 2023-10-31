@@ -54,7 +54,7 @@ _reactions:
 
 deployments: ## i.e, how to place nodes
   type: GraphStreamDeployment
-  parameters: [*devices, "BarabasiAlbert", 3 ]
+  parameters: [ *devices, "BarabasiAlbert", 3 ]
   programs: # the reactions installed in each node
     - *program
     - *thickDevice
@@ -75,8 +75,8 @@ environment:
 export:
   - type: CSVExporter
     parameters:
-      exportPath: "data/advanced-barabasi"
-      fileNameRoot: "load_based_reconfiguration"
+      exportPath: "data"
+      fileNameRoot: "load_based_advanced_barabasi"
       interval: *exportInterval
     data:
       - type: Time
