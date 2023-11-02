@@ -8,7 +8,7 @@ class ThickDevice extends AggregateProgram with StandardSensors with ScafiAlchem
   private lazy val initialLoad = randomGen.nextDouble() * maxSystemLoad
   private lazy val randomLoadStrategy = (_: Double) => randomGen.nextDouble() * maxSystemLoad
   private lazy val sinNoisedLoadStrategy = (time: Double) => {
-    val sinValue = Math.sin(time / 600) // A period of 600 time units (6 cycles per hour)
+    val sinValue = Math.sin((randomGen.nextDouble() * 100) * time % 600) // A period of 600 time units (6 cycles per hour)
     val noise = randomGen.nextGaussian() * 15 // 15 is the standard deviation
     (60 * (sinValue + 1) / 2) + noise
   }
