@@ -27,7 +27,7 @@ variables:
     parameters: [ 1.0, [ 1.0, 3.0, 10.0 ] ]
   deviceChoiceStrategy: &deviceChoiceStrategy
     type: ArbitraryVariable
-    parameters: [ "\"random\"", [ "\"random\"", "\"highFirst\"", "\"lowFirst\"" ] ]
+    parameters: [ "\"highFirst\"", [ "\"random\"", "\"highFirst\"", "\"lowFirst\"" ] ]
 
 seeds:
   scenario: *random
@@ -66,6 +66,11 @@ environment:
   type: Continuous2DEnvironment
   parameters: [ ]
   global-programs:
+    - time-distribution:
+        type: DiracComb
+        parameters: [ 1, 0.0025 ]
+      type: DisconnectNode
+      parameters: [ ]
     - time-distribution:
         type: Trigger
         parameters: [ 0 ]

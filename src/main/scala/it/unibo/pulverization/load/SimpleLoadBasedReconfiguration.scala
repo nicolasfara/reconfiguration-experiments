@@ -21,38 +21,51 @@ class SimpleLoadBasedReconfiguration
     val computationalCost = node.getOrElse[Double]("computationCost", 0.0)
     val load = node.getOrElse[Double]("load", 0.0)
     val deviceChoiceStrategy = node.getOrElse[String]("deviceChoiceStrategy", "random")
+    val isActive = node.getOrElse[Boolean]("isActive", false)
 
-    val potential = classicGradient(isThickHost)
-    val leaderId = G[ID](isThickHost, mid(), identity, nbrRange _)
+    branch(isActive) {
+      val potential = classicGradient(isThickHost)
+      val leaderId = G[ID](isThickHost, mid(), identity, nbrRange _)
 
-    val devicesCovered =
-      collect[Set[(Double, ID)]](potential, _ ++ _, Set((computationalCost, mid())), Set.empty, nbrRange _)
+      val devicesCovered =
+        collect[Set[(Double, ID)]](potential, _ ++ _, Set((computationalCost, mid())), Set.empty, nbrRange _)
 
-    val devicesCanOffloading = deviceChoiceStrategy match {
-      case "random" => randomDecisionChoice(devicesCovered, load)(this)
-      case "lowFirst" => lowLoadDeviceDecisionChoice(devicesCovered, load)
-      case "highFirst" => highLoadDeviceDecisionChoice(devicesCovered, load)
-      case _ => throw new IllegalStateException("Device selection strategy not handled")
+      val devicesCanOffloading = deviceChoiceStrategy match {
+        case "random" => randomDecisionChoice(devicesCovered, load)(this)
+        case "lowFirst" => lowLoadDeviceDecisionChoice(devicesCovered, load)
+        case "highFirst" => highLoadDeviceDecisionChoice(devicesCovered, load)
+        case _ => throw new IllegalStateException("Device selection strategy not handled")
+      }
+
+      val offloadingLoad = devicesCanOffloading.toList.map(_._1).sum
+
+      val devicesCanOffload = G[Set[ID]](isThickHost, devicesCanOffloading.map(_._2), identity, nbrRange _)
+      val canOffload = devicesCanOffload.contains(mid())
+
+      val latency = classicGradient(isThickHost)
+
+      // METRICS ---------------------------------------------------------------------------------------------------------
+      if (!isThickHost) {
+        node.put("canOffload", canOffload)
+      }
+      if (!isThickHost) {
+        node.put("wantToOffload", true)
+      }
+      node.put("latency", if (canOffload && !isThickHost) latency else Double.NaN)
+      if (isThickHost) {
+        node.put("effectiveLoad", load + offloadingLoad)
+      }
+      // -----------------------------------------------------------------------------------------------------------------
+
+      // GRAPHICAL EFFECTS -----------------------------------------------------------------------------------------------
+      node.put("leaderID", if (canOffload) leaderId else -1)
+      node.put("leaderEffect", leaderId % 10)
+      // -----------------------------------------------------------------------------------------------------------------
+    } {
+      node.put("isLeader", false)
+      node.put("leaderID", -1)
+      node.put("leaderEffect", -1)
     }
-
-    val offloadingLoad = devicesCanOffloading.toList.map(_._1).sum
-
-    val devicesCanOffload = G[Set[ID]](isThickHost, devicesCanOffloading.map(_._2), identity, nbrRange _)
-    val canOffload = devicesCanOffload.contains(mid())
-
-    val latency = classicGradient(isThickHost)
-
-    // METRICS ---------------------------------------------------------------------------------------------------------
-    if (!isThickHost) { node.put("canOffload", canOffload) }
-    if (!isThickHost) { node.put("wantToOffload", true) }
-    node.put("latency", if (canOffload && !isThickHost) latency else Double.NaN)
-    if (isThickHost) { node.put("effectiveLoad", load + offloadingLoad) }
-    // -----------------------------------------------------------------------------------------------------------------
-
-    // GRAPHICAL EFFECTS -----------------------------------------------------------------------------------------------
-    node.put("leaderID", if (canOffload) leaderId else -1)
-    node.put("leaderEffect", leaderId % 10)
-    // -----------------------------------------------------------------------------------------------------------------
   }
 
   private def collect[V](potential: Double, acc: (V, V) => V, local: V, Null: V, metric: Metric): V =
