@@ -3,6 +3,7 @@ package it.unibo.pulverization.load
 import it.unibo.alchemist.model.scafi.ScafiIncarnationForAlchemist._
 import Builtins._
 import it.unibo.pulverization.load.strategies.OffloadingStrategies._
+import it.unibo.scafi.utils.RichStateManagement
 
 class SimpleLoadBasedReconfiguration
     extends AggregateProgram
@@ -11,7 +12,8 @@ class SimpleLoadBasedReconfiguration
     with FieldUtils
     with BlockG
     with BlockC
-    with CustomSpawn {
+    with CustomSpawn
+    with RichStateManagement {
 
   /** The baseline representing a "static" scenario in which each device has only a one device to offload the
     * computation. The device in which offload the computation is based on the closest device.
@@ -24,6 +26,7 @@ class SimpleLoadBasedReconfiguration
     val isActive = node.getOrElse[Boolean]("isActive", false)
 
     branch(isActive) {
+      val counter = rep(0)(_ + 1)
       val potential = classicGradient(isThickHost)
       val leaderId = G[ID](isThickHost, mid(), identity, nbrRange _)
 
@@ -39,16 +42,20 @@ class SimpleLoadBasedReconfiguration
 
       val offloadingLoad = devicesCanOffloading.toList.map(_._1).sum
 
-      val devicesCanOffload = G[Set[ID]](isThickHost, devicesCanOffloading.map(_._2), identity, nbrRange _)
-      val canOffload = devicesCanOffload.contains(mid())
+      val (ttl, devicesCanOffload) =
+        G[(Int, Set[ID])](isThickHost, (counter, devicesCanOffloading.map(_._2)), identity, nbrRange _)
+
+      val lastN = recentValues(30, ttl)
+      val isLeaderLost = if (lastN.size == 30) lastN.forall(_ == lastN.head) else false
+
+      var canOffload = if (!isLeaderLost) devicesCanOffload.contains(mid()) else false
+      canOffload = canOffload && potential != Double.PositiveInfinity
 
       val latency = classicGradient(isThickHost)
 
       // METRICS ---------------------------------------------------------------------------------------------------------
       if (!isThickHost) {
         node.put("canOffload", canOffload)
-      }
-      if (!isThickHost) {
         node.put("wantToOffload", true)
       }
       node.put("latency", if (canOffload && !isThickHost) latency else Double.NaN)
@@ -58,7 +65,8 @@ class SimpleLoadBasedReconfiguration
       // -----------------------------------------------------------------------------------------------------------------
 
       // GRAPHICAL EFFECTS -----------------------------------------------------------------------------------------------
-      node.put("leaderID", if (canOffload) leaderId else -1)
+      node.put("isLeader", isThickHost)
+      node.put("leaderID", if (canOffload || isThickHost) leaderId else -1)
       node.put("leaderEffect", leaderId % 10)
       // -----------------------------------------------------------------------------------------------------------------
     } {
