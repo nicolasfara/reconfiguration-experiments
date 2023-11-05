@@ -54,7 +54,7 @@ _reactions:
 
 deployments: ## i.e, how to place nodes
   type: GraphStreamDeployment
-  parameters: [ *devices, "Lobster", 2, 15 ]
+  parameters: [ *devices, "Lobster", 4, 20 ]
   programs: # the reactions installed in each node
     - *program
     - *thickDevice

@@ -71,6 +71,11 @@ environment:
         parameters: [ 0 ]
       type: ComputeCentrality
       parameters: [ *leadersCount, *computationalCost ]
+    - time-distribution:
+        type: DiracComb
+        parameters: [ 1, 0.0025 ]
+      type: DisconnectNode
+      parameters: [ ]
 
 export:
   - type: CSVExporter

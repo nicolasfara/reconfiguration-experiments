@@ -74,7 +74,6 @@ class AdvancedLoadBasedReconfiguration
       node.put("leaderID", -1)
       node.put("leaderEffect", -1)
     }
-
   }
 
   override def G[V](source: Boolean, field: V, acc: V => V, metric: () => Double): V = {
