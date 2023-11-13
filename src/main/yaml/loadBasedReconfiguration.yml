@@ -14,7 +14,7 @@ variables:
     default: 0
   devices:
     type: ArbitraryVariable
-    parameters: [ 100, [ 100, 1000, 5000 ] ]
+    parameters: [ 100, [ 25, 100, 1000 ] ]
   leaders: &leadersCount
     min: 5
     max: 10
@@ -25,7 +25,7 @@ variables:
     parameters: [ 1.0, [ 1.0, 3.0, 10.0 ] ]
   load: &loadType
     type: ArbitraryVariable
-    parameters: [ 1, [ 0, 1 ] ] # 0 = constant, 1 = variable
+    parameters: [ 0, [ 0, 1 ] ] # 0 = constant, 1 = variable
   network:
     type: ArbitraryVariable
     parameters: [ "lobster", [ "barabasi", "lobster" ] ]

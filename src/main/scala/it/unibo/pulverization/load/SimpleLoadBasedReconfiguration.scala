@@ -2,6 +2,7 @@ package it.unibo.pulverization.load
 
 import it.unibo.alchemist.model.scafi.ScafiIncarnationForAlchemist._
 import Builtins._
+import it.unibo.alchemist.model.molecules.SimpleMolecule
 import it.unibo.pulverization.load.strategies.OffloadingStrategies._
 import it.unibo.scafi.utils.RichStateManagement
 
@@ -15,15 +16,28 @@ class SimpleLoadBasedReconfiguration
     with CustomSpawn
     with RichStateManagement {
 
-  /** The baseline representing a "static" scenario in which each device has only a one device to offload the
-    * computation. The device in which offload the computation is based on the closest device.
-    */
-  override def main(): Any = {
+  private lazy val thickHosts = alchemistEnvironment.getNodes
+    .stream()
+    .filter(node => node.getConcentration(new SimpleMolecule("isThickHost")).asInstanceOf[Boolean])
+    .map(node => node.getId)
+    .toList
+
+  override def main(): Unit = {
     val isThickHost = node.getOrElse[Boolean]("isThickHost", false)
     val computationalCost = node.getOrElse[Double]("computationCost", 0.0)
     val load = node.getOrElse[Double]("load", 0.0)
     val deviceChoiceStrategy = node.getOrElse[String]("deviceChoiceStrategy", "highFirst")
-    val isActive = node.getOrElse[Boolean]("isActive", false)
+
+    val slots = 3600 / (thickHosts.size() * 2 - 1)
+    val timeSlice = 3600 / slots
+    val slice = math.floor(alchemistTimestamp.toDouble / slots).toInt
+    val activeNodes =
+      if (alchemistTimestamp.toDouble < math.ceil(slots / 2) * timeSlice)
+        thickHosts.stream().limit(thickHosts.size() - slice).toList
+      else thickHosts.stream().limit(slice - (thickHosts.size() - 2)).toList
+    val active = activeNodes.contains(mid())
+
+    val isActive = if (node.get[Int]("loadType") == 0) active || !isThickHost else true
 
     branch(isActive) {
       val counter = rep(0)(_ + 1)

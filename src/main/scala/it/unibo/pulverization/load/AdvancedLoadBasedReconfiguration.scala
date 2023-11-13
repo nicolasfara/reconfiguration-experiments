@@ -10,40 +10,40 @@ class AdvancedLoadBasedReconfiguration
     extends AggregateProgram
     with StandardSensors
     with ScafiAlchemistSupport
-    with FieldUtils
     with BlockG
     with BlockC
-    with CustomSpawn
     with RichStateManagement {
 
-  private lazy val thickHosts = {
-    alchemistEnvironment.getNodes
-      .stream()
-      .filter(node => node.getConcentration(new SimpleMolecule("isThickHost")).asInstanceOf[Boolean])
-      .map(node => node.getId)
-      .toList
-  }
+  private lazy val thickHosts = alchemistEnvironment.getNodes
+    .stream()
+    .filter(node => node.getConcentration(new SimpleMolecule("isThickHost")).asInstanceOf[Boolean])
+    .map(node => node.getId)
+    .toList
 
-  private lazy val myIdAsThick: Int = thickHosts.indexOf(mid())
-
-  /** Main idea of the algorithm: */
   override def main(): Unit = {
     val isThickHost = node.getOrElse[Boolean]("isThickHost", false)
-    val computationCost = node.getOrElse[Double]("computationCost", 0.0)
+    val computationalCost = node.getOrElse[Double]("computationCost", 0.0)
     val load = node.getOrElse[Double]("load", 0.0)
     val deviceChoiceStrategy = node.getOrElse[String]("deviceChoiceStrategy", "highFirst")
-    val interval = 400
-    val active = !isThickHost ||
-      (myIdAsThick + 1 > alchemistTimestamp.toDouble / interval || myIdAsThick * 2 + 1 > alchemistTimestamp.toDouble / interval)
-    val isActive = if (node.get[Int]("loadType") == 0) true else active
+
+    val slots = 3600 / (thickHosts.size() * 2 - 1)
+    val timeSlice = 3600 / slots
+    val slice = math.floor(alchemistTimestamp.toDouble / slots).toInt
+    val activeNodes =
+      if (alchemistTimestamp.toDouble < math.ceil(slots / 2) * timeSlice)
+        thickHosts.stream().limit(thickHosts.size() - slice).toList
+      else thickHosts.stream().limit(slice - (thickHosts.size() - 2)).toList
+    val active = activeNodes.contains(mid())
+
+    val isActive = if (node.get[Int]("loadType") == 0) active || !isThickHost else true
 
     branch(isActive) {
       val counter = rep(0)(_ + 1)
-      val myMetric = () => computationCost
+      val myMetric = () => computationalCost
 
       val potential = Grad(isThickHost, load, myMetric)
       val devicesCovered =
-        collect[Set[(Double, ID)]](potential, _ ++ _, Set((computationCost, mid())), Set(), myMetric)
+        collect[Set[(Double, ID)]](potential, _ ++ _, Set((computationalCost, mid())), Set(), myMetric)
 
       val devicesCanOffloading = deviceChoiceStrategy match {
         case "random" => randomDecisionChoice(devicesCovered, load)(this)
