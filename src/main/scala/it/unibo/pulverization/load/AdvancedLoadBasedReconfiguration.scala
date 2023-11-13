@@ -28,7 +28,6 @@ class AdvancedLoadBasedReconfiguration
       val myMetric = () => computationCost
 
       val potential = Grad(isThickHost, load, myMetric)
-      node.put("potential", potential)
       val devicesCovered =
         collect[Set[(Double, ID)]](potential, _ ++ _, Set((computationCost, mid())), Set(), myMetric)
 
@@ -57,9 +56,8 @@ class AdvancedLoadBasedReconfiguration
       if (!isThickHost) {
         node.put("canOffload", canOffload)
         node.put("wantToOffload", true)
-      }
-      node.put("latency", if (canOffload && !isThickHost) latency else Double.NaN)
-      if (isThickHost) {
+        node.put("latency", if (canOffload && !isThickHost) latency else Double.NaN)
+      } else {
         node.put("effectiveLoad", load + offloadingLoad)
       }
       // ---------------------------------------------------------------------------------------------------------------

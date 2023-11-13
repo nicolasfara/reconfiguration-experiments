@@ -45,7 +45,7 @@ _reactions:
   - program: &program
       - time-distribution:
           type: ExponentialTime
-          parameters: [ *programRate ]
+          parameters: [ *programRate, 1 ]
         type: Event
         actions:
           - type: RunScafiProgram
