@@ -2,6 +2,7 @@ package it.unibo.pulverization.load
 
 import it.unibo.alchemist.model.scafi.ScafiIncarnationForAlchemist._
 import Builtins._
+import it.unibo.alchemist.model.molecules.SimpleMolecule
 import it.unibo.pulverization.load.strategies.OffloadingStrategies._
 import it.unibo.scafi.utils.RichStateManagement
 
@@ -15,13 +16,26 @@ class AdvancedLoadBasedReconfiguration
     with CustomSpawn
     with RichStateManagement {
 
+  private lazy val thickHosts = {
+    alchemistEnvironment.getNodes
+      .stream()
+      .filter(node => node.getConcentration(new SimpleMolecule("isThickHost")).asInstanceOf[Boolean])
+      .map(node => node.getId)
+      .toList
+  }
+
+  private lazy val myIdAsThick: Int = thickHosts.indexOf(mid())
+
   /** Main idea of the algorithm: */
   override def main(): Unit = {
     val isThickHost = node.getOrElse[Boolean]("isThickHost", false)
     val computationCost = node.getOrElse[Double]("computationCost", 0.0)
     val load = node.getOrElse[Double]("load", 0.0)
-    val deviceChoiceStrategy = node.getOrElse[String]("deviceChoiceStrategy", "random")
-    val isActive = node.getOrElse[Boolean]("isActive", true)
+    val deviceChoiceStrategy = node.getOrElse[String]("deviceChoiceStrategy", "highFirst")
+    val interval = 400
+    val active = !isThickHost ||
+      (myIdAsThick + 1 > alchemistTimestamp.toDouble / interval || myIdAsThick * 2 + 1 > alchemistTimestamp.toDouble / interval)
+    val isActive = if (node.get[Int]("loadType") == 0) true else active
 
     branch(isActive) {
       val counter = rep(0)(_ + 1)

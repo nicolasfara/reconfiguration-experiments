@@ -12,11 +12,9 @@ variables:
     max: 5
     step: 1
     default: 0
-  devices: &devices
-    min: 100
-    max: 200
-    step: 50
-    default: 100
+  devices:
+    type: ArbitraryVariable
+    parameters: [ 100, [ 100, 1000, 5000 ] ]
   leaders: &leadersCount
     min: 5
     max: 10
@@ -25,9 +23,29 @@ variables:
   computationalCost: &computationalCost
     type: ArbitraryVariable
     parameters: [ 1.0, [ 1.0, 3.0, 10.0 ] ]
-  deviceChoiceStrategy: &deviceChoiceStrategy
+  load: &loadType
     type: ArbitraryVariable
-    parameters: [ "\"highFirst\"", [ "\"random\"", "\"highFirst\"", "\"lowFirst\"" ] ]
+    parameters: [ 1, [ 0, 1 ] ] # 0 = constant, 1 = variable
+  network:
+    type: ArbitraryVariable
+    parameters: [ "lobster", [ "barabasi", "lobster" ] ]
+  actualNetwork: &actualNetwork
+    language: kotlin
+    formula: |
+      mapOf(
+          "barabasi" to listOf(devices, "BarabasiAlbert", 3),
+          "lobster" to listOf(devices, "Lobster", 4, 20)
+      )[network]
+  behavior:
+    type: ArbitraryVariable
+    parameters: [ "advanced", [ "advanced", "simple" ] ]
+  actualBehaviour: &actualBehavior
+    language: kotlin
+    formula: |
+      mapOf(
+          "advanced" to listOf("it.unibo.pulverization.load.AdvancedLoadBasedReconfiguration", 15.0),
+          "simple" to listOf("it.unibo.pulverization.load.SimpleLoadBasedReconfiguration", 15.0),
+      )[behavior]
 
 seeds:
   scenario: *random
@@ -41,7 +59,7 @@ _reactions:
         type: Event
         actions:
           - type: RunScafiProgram
-            parameters: [ "it.unibo.pulverization.devices.ThickDevice" ]
+            parameters: [ "it.unibo.pulverization.devices.ThickHost" ]
   - program: &program
       - time-distribution:
           type: ExponentialTime
@@ -49,18 +67,21 @@ _reactions:
         type: Event
         actions:
           - type: RunScafiProgram
-            parameters: [ "it.unibo.pulverization.load.SimpleLoadBasedReconfiguration", *retentionTime ]
+            parameters: *actualBehavior
       - program: send
 
-deployments: ## i.e, how to place nodes
+network-model:
+  - type: CloudLinkingRule
+
+deployments:
   type: GraphStreamDeployment
-  parameters: [ *devices, "Barabasi", 3 ]
-  programs: # the reactions installed in each node
+  parameters: *actualNetwork
+  programs:
     - *program
     - *thickDevice
   contents:
-    - molecule: "deviceChoiceStrategy"
-      concentration: *deviceChoiceStrategy
+    - molecule: "loadType"
+      concentration: *loadType
 
 environment:
   type: Continuous2DEnvironment
@@ -71,17 +92,12 @@ environment:
         parameters: [ 0 ]
       type: ComputeCentrality
       parameters: [ *leadersCount, *computationalCost ]
-    - time-distribution:
-        type: DiracComb
-        parameters: [ 1, 0.0025 ]
-      type: DisconnectNode
-      parameters: [ ]
 
 export:
   - type: CSVExporter
     parameters:
       exportPath: "data"
-      fileNameRoot: "load_based_simple_barabasi"
+      fileNameRoot: "load_based"
       interval: *exportInterval
     data:
       - type: Time
@@ -102,6 +118,7 @@ export:
       - molecule: "latency"
         aggregators: [ mean, max, min ]
         value-filter: onlyfinite
+
 terminate:
   - type: AfterTime
     parameters: [ *simulationSeconds ]

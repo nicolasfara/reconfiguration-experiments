@@ -22,7 +22,7 @@ class SimpleLoadBasedReconfiguration
     val isThickHost = node.getOrElse[Boolean]("isThickHost", false)
     val computationalCost = node.getOrElse[Double]("computationCost", 0.0)
     val load = node.getOrElse[Double]("load", 0.0)
-    val deviceChoiceStrategy = node.getOrElse[String]("deviceChoiceStrategy", "random")
+    val deviceChoiceStrategy = node.getOrElse[String]("deviceChoiceStrategy", "highFirst")
     val isActive = node.getOrElse[Boolean]("isActive", false)
 
     branch(isActive) {

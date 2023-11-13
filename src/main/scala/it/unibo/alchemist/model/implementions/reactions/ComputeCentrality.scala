@@ -1,8 +1,8 @@
 package it.unibo.alchemist.model.implementions.reactions
 
+import it.unibo.alchemist.model._
 import it.unibo.alchemist.model.implementations.reactions.AbstractGlobalReaction
 import it.unibo.alchemist.model.molecules.SimpleMolecule
-import it.unibo.alchemist.model.{Environment, Position, Time, TimeDistribution}
 import org.apache.commons.math3.random.RandomGenerator
 
 class ComputeCentrality[T, P <: Position[P]](
@@ -16,6 +16,7 @@ class ComputeCentrality[T, P <: Position[P]](
   private val isActive = new SimpleMolecule("isActive")
   private val computationCostMolecule = new SimpleMolecule("computationCost")
   private val loadMolecule = new SimpleMolecule("load")
+  private lazy val nodeCount = environment.getNodes.size()
 
   override protected def executeBeforeUpdateDistribution(): Unit = {
     setupThickDevices()
@@ -30,9 +31,10 @@ class ComputeCentrality[T, P <: Position[P]](
     environment.getNodes
       .stream()
       .sorted((a, b) => environment.getNeighborhood(b).size() - environment.getNeighborhood(a).size())
-      .limit(thickHostAsLeader)
+      .limit(Math.ceil(nodeCount * 0.05).toLong) // The leaders are the 5% of the entire network
       .forEach { node =>
         node.setConcentration(isThickHostMolecule, true.asInstanceOf[T])
+        environment.moveNodeToPosition(node, environment.getPosition(node))
       }
   }
 
