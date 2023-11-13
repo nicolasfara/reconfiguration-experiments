@@ -1,6 +1,6 @@
 [versions]
 alchemist = "28.4.4"
-kotlin = "1.9.10"
+kotlin = "1.9.20"
 ktor = "2.3.5"
 
 [libraries]
