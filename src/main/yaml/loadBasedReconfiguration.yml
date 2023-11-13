@@ -15,11 +15,6 @@ variables:
   devices:
     type: ArbitraryVariable
     parameters: [ 100, [ 25, 100, 1000 ] ]
-  leaders: &leadersCount
-    min: 5
-    max: 10
-    step: 1
-    default: 5
   computationalCost: &computationalCost
     type: ArbitraryVariable
     parameters: [ 1.0, [ 1.0, 3.0, 10.0 ] ]
@@ -91,7 +86,7 @@ environment:
         type: Trigger
         parameters: [ 0 ]
       type: ComputeCentrality
-      parameters: [ *leadersCount, *computationalCost ]
+      parameters: [ 0, *computationalCost ]
 
 export:
   - type: CSVExporter
