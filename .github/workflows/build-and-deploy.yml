@@ -43,6 +43,9 @@ jobs:
         with:
           deploy-command: ./gradlew dockerPushImage
           should-run-codecov: false
+          should-deploy: true
+          build-command: true
+          check-command: true
   success:
     runs-on: ubuntu-latest
     needs:
