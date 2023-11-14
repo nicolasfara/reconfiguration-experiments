@@ -11,6 +11,8 @@ plugins {
     alias(libs.plugins.taskTree) // Helps debugging dependencies among gradle tasks
     alias(libs.plugins.kotlin)
     alias(libs.plugins.kotlinx.serialization)
+    id("com.github.johnrengelman.shadow") version "8.1.1"
+    id("com.bmuschko.docker-java-application") version "6.7.0"
 }
 
 repositories {
@@ -50,11 +52,11 @@ val ciAlchemistConfiguration = """
 """.trimIndent()
 
 val batchAlchemistConfiguration = """
-    launcher:
-      type: HeadlessSimulationLauncher
-      parameters:
-        parallelism: ${Runtime.getRuntime().availableProcessors() - 1}
-        variables: [random, network, behavior, devices, load, computationalCost]
+    launcher: \
+      type: HeadlessSimulationLauncher \
+      parameters: \
+        parallelism: ${Runtime.getRuntime().availableProcessors() - 1} \
+        variables: [random, computationalCost, devices]
 """.trimIndent()
 
 fun graphicsAlchemistConfiguration(effectName: String) = """
@@ -92,7 +94,7 @@ File(rootProject.rootDir.path + "/src/main/yaml").listFiles()
                 System.getenv("CI") == "true" -> args(ciAlchemistConfiguration)
                 // If it is running in batch mode, use the "headless" mode of the simulator with the variables specified
                 // in the 'batchAlchemistConfiguration'
-                batch == "true" -> args(batchAlchemistConfiguration)
+                batch == "true" -> args(batchAlchemistConfiguration.replace("\\", ""))
                 // A graphics environment should be available, so load the effects for the UI from the "effects" folder
                 // Effects are expected to be named after the simulation file
                 else -> args(graphicsAlchemistConfiguration(it.nameWithoutExtension))
@@ -109,6 +111,20 @@ val runAllLoadBased by tasks.register<DefaultTask>("runAllLoadBased") {
     tasks.filter { it.name.startsWith("runLoadBased") }.forEach {
         dependsOn(it)
     }
+}
+
+val dockerUsername = "nicolasfarabegoli"
+
+docker {
+    javaApplication {
+        baseImage = "eclipse-temurin:21"
+        maintainer = "Nicolas Farabegoli <nicolas.farabegoli@unibo.it>"
+        jvmArgs = listOf("-Xms256m", "-Xmx2048m")
+        mainClassName = "it.unibo.alchemist.Alchemist"
+    }
+}
+tasks.dockerCreateDockerfile {
+    defaultCommand("run", "src/main/yaml/LoadBased.yml", "--override", batchAlchemistConfiguration)
 }
 
 tasks.withType<Tar>().configureEach {
