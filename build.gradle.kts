@@ -11,7 +11,7 @@ plugins {
     alias(libs.plugins.taskTree) // Helps debugging dependencies among gradle tasks
     alias(libs.plugins.kotlin)
     alias(libs.plugins.kotlinx.serialization)
-    id("com.bmuschko.docker-java-application") version "6.7.0"
+    id("com.bmuschko.docker-java-application") version "8.1.0"
 }
 
 repositories {
