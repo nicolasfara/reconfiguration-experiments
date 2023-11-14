@@ -65,43 +65,45 @@ fun graphicsAlchemistConfiguration(effectName: String) = """
         graphics: effects/$effectName.json
 """.trimIndent()
 
+val simulationFiles = File(rootProject.rootDir.path + "/src/main/yaml").listFiles()
+    ?.filter { it.extension == "yml" } // pick all yml files in src/main/yaml
+    ?.sortedBy { it.nameWithoutExtension } // sort them, we like reproducibility
+
 /*
  * Scan the folder with the simulation files, and create a task for each one of them.
  */
-File(rootProject.rootDir.path + "/src/main/yaml").listFiles()
-    ?.filter { it.extension == "yml" } // pick all yml files in src/main/yaml
-    ?.sortedBy { it.nameWithoutExtension } // sort them, we like reproducibility
-    ?.forEach {
-        // one simulation file -> one gradle task
-        val task by tasks.register<JavaExec>("run${it.nameWithoutExtension.capitalized()}") {
-            group = alchemistGroup // This is for better organization when running ./gradlew tasks
-            description = "Launches simulation ${it.nameWithoutExtension}" // Just documentation
-            mainClass.set("it.unibo.alchemist.Alchemist") // The class to launch
-            classpath = sourceSets["main"].runtimeClasspath // The classpath to use
-            // Uses the latest version of java
-            javaLauncher.set(
-                javaToolchains.launcherFor {
-                    languageVersion.set(JavaLanguageVersion.of(multiJvm.latestJava))
-                },
-            )
-            jvmArgs("-Dsun.java2d.opengl=true")
-            // These are the program arguments
-            args("run", it.absolutePath, "--override")
-            when {
-                // If it is running in a Continuous Integration environment, use the "headless" mode of the simulator
-                // Namely, force the simulator not to use graphical output.
-                System.getenv("CI") == "true" -> args(ciAlchemistConfiguration)
-                // If it is running in batch mode, use the "headless" mode of the simulator with the variables specified
-                // in the 'batchAlchemistConfiguration'
-                batch == "true" -> args(batchAlchemistConfiguration)
-                // A graphics environment should be available, so load the effects for the UI from the "effects" folder
-                // Effects are expected to be named after the simulation file
-                else -> args(graphicsAlchemistConfiguration(it.nameWithoutExtension))
-            }
+
+simulationFiles?.forEach {
+    // one simulation file -> one gradle task
+    val task by tasks.register<JavaExec>("run${it.nameWithoutExtension.capitalized()}") {
+        group = alchemistGroup // This is for better organization when running ./gradlew tasks
+        description = "Launches simulation ${it.nameWithoutExtension}" // Just documentation
+        mainClass.set("it.unibo.alchemist.Alchemist") // The class to launch
+        classpath = sourceSets["main"].runtimeClasspath // The classpath to use
+        // Uses the latest version of java
+        javaLauncher.set(
+            javaToolchains.launcherFor {
+                languageVersion.set(JavaLanguageVersion.of(multiJvm.latestJava))
+            },
+        )
+        jvmArgs("-Dsun.java2d.opengl=true")
+        // These are the program arguments
+        args("run", it.absolutePath, "--override")
+        when {
+            // If it is running in a Continuous Integration environment, use the "headless" mode of the simulator
+            // Namely, force the simulator not to use graphical output.
+            System.getenv("CI") == "true" -> args(ciAlchemistConfiguration)
+            // If it is running in batch mode, use the "headless" mode of the simulator with the variables specified
+            // in the 'batchAlchemistConfiguration'
+            batch == "true" -> args(batchAlchemistConfiguration)
+            // A graphics environment should be available, so load the effects for the UI from the "effects" folder
+            // Effects are expected to be named after the simulation file
+            else -> args(graphicsAlchemistConfiguration(it.nameWithoutExtension))
         }
-        // task.dependsOn(classpathJar) // Uncomment to switch to jar-based classpath resolution
-        runAll.dependsOn(task)
     }
+    // task.dependsOn(classpathJar) // Uncomment to switch to jar-based classpath resolution
+    runAll.dependsOn(task)
+}
 
 val runAllLoadBased by tasks.register<DefaultTask>("runAllLoadBased") {
     group = alchemistGroup
@@ -118,25 +120,31 @@ docker {
         maintainer = "Nicolas Farabegoli <nicolas.farabegoli@unibo.it>"
         jvmArgs = listOf("-Xms256m", "-Xmx2048m")
         mainClassName = "it.unibo.alchemist.Alchemist"
+        images = setOf("nicolasfarabegoli/reconfiguration-experiments:latest")
     }
 }
 
-tasks.dockerCreateDockerfile {
-    val simulationsFile = File(rootProject.rootDir.path + "/src/main/yaml").listFiles()
-        ?.filter { it.extension == "yml" }
-        ?.minByOrNull { it.nameWithoutExtension }
+val simulationFileName = "loadBasedReconfiguration.yml"
 
-    copy {
-        from(simulationsFile?.absolutePath)
-        into(layout.buildDirectory.dir("docker"))
+tasks.dockerCreateDockerfile {
+    simulationFiles?.forEach {
+        copyFile(it.name, ".")
     }
-    copyFile(simulationsFile?.name, ".")
     defaultCommand(
         "run",
-        simulationsFile?.name,
+        simulationFileName,
         "--override",
         batchAlchemistConfiguration.replace("\n", "\\n"),
     )
+
+    doLast {
+        simulationFiles?.forEach {
+            copy {
+                from(it.absolutePath)
+                into(layout.buildDirectory.dir("docker"))
+            }
+        }
+    }
 }
 
 tasks.withType<Tar>().configureEach {
