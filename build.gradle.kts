@@ -52,11 +52,11 @@ val ciAlchemistConfiguration = """
 """.trimIndent()
 
 val batchAlchemistConfiguration = """
-    launcher: \
-      type: HeadlessSimulationLauncher \
-      parameters: \
-        parallelism: ${Runtime.getRuntime().availableProcessors() - 1} \
-        variables: [random, computationalCost, devices]
+launcher:
+  type: HeadlessSimulationLauncher
+  parameters:
+    parallelism: ${Runtime.getRuntime().availableProcessors() - 1}
+    variables: [random, network, behavior, devices, load, computationalCost]
 """.trimIndent()
 
 fun graphicsAlchemistConfiguration(effectName: String) = """
@@ -94,7 +94,7 @@ File(rootProject.rootDir.path + "/src/main/yaml").listFiles()
                 System.getenv("CI") == "true" -> args(ciAlchemistConfiguration)
                 // If it is running in batch mode, use the "headless" mode of the simulator with the variables specified
                 // in the 'batchAlchemistConfiguration'
-                batch == "true" -> args(batchAlchemistConfiguration.replace("\\", ""))
+                batch == "true" -> args(batchAlchemistConfiguration)
                 // A graphics environment should be available, so load the effects for the UI from the "effects" folder
                 // Effects are expected to be named after the simulation file
                 else -> args(graphicsAlchemistConfiguration(it.nameWithoutExtension))
@@ -113,18 +113,31 @@ val runAllLoadBased by tasks.register<DefaultTask>("runAllLoadBased") {
     }
 }
 
-val dockerUsername = "nicolasfarabegoli"
-
 docker {
     javaApplication {
-        baseImage = "eclipse-temurin:21"
+        baseImage = "eclipse-temurin:${multiJvm.jvmVersionForCompilation.get()}"
         maintainer = "Nicolas Farabegoli <nicolas.farabegoli@unibo.it>"
         jvmArgs = listOf("-Xms256m", "-Xmx2048m")
         mainClassName = "it.unibo.alchemist.Alchemist"
     }
 }
+
 tasks.dockerCreateDockerfile {
-    defaultCommand("run", "src/main/yaml/LoadBased.yml", "--override", batchAlchemistConfiguration)
+    val simulationsFile = File(rootProject.rootDir.path + "/src/main/yaml").listFiles()
+        ?.filter { it.extension == "yml" }
+        ?.minByOrNull { it.nameWithoutExtension }
+
+    copy {
+        from(simulationsFile?.absolutePath)
+        into(layout.buildDirectory.dir("docker"))
+    }
+    copyFile(simulationsFile?.name, ".")
+    defaultCommand(
+        "run",
+        simulationsFile?.name,
+        "--override",
+        batchAlchemistConfiguration.replace("\n", "\\n"),
+    )
 }
 
 tasks.withType<Tar>().configureEach {
