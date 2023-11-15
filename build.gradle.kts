@@ -54,7 +54,7 @@ val batchAlchemistConfiguration = """
 launcher:
   type: HeadlessSimulationLauncher
   parameters:
-    parallelism: ${Runtime.getRuntime().availableProcessors() - 1}
+    parallelism: 91
     variables: [random, network, behavior, devices, load, computationalCost]
 """.trimIndent()
 
