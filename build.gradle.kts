@@ -118,7 +118,7 @@ docker {
     javaApplication {
         baseImage = "eclipse-temurin:${multiJvm.jvmVersionForCompilation.get()}"
         maintainer = "Nicolas Farabegoli <nicolas.farabegoli@unibo.it>"
-        jvmArgs = listOf("-Xms256m", "-Xmx2048m")
+        jvmArgs = listOf("-Xms256m", "-Xmx200g")
         mainClassName = "it.unibo.alchemist.Alchemist"
         images = setOf("nicolasfarabegoli/reconfiguration-experiments:latest")
     }
