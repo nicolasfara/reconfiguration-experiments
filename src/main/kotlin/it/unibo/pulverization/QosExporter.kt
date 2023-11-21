@@ -27,6 +27,6 @@ class QosExporter @JvmOverloads constructor(
         val sumWantOffload =
             environment.nodes.mapNotNull { it.getConcentration(wantToOffloadMolecule) }
                 .sumOf { if (it as Boolean) 1.0 else 0.0 }
-        return mapOf("qos" to sumWantOffload / sumCanOffload)
+        return mapOf("qos" to sumCanOffload / sumWantOffload)
     }
 }
