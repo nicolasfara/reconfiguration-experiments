@@ -9,7 +9,7 @@ _constants:
 variables:
   random: &random
     min: 0
-    max: 5
+    max: 9
     step: 1
     default: 0
   devices:
@@ -104,6 +104,9 @@ export:
       - molecule: "wantToOffload"
         aggregators: [ sum ]
         value-filter: onlyfinite
+      - type: it.unibo.pulverization.QosExporter
+        parameters:
+          precision: 5
       - molecule: "effectiveLoad"
         aggregators: [ mean, max, min ]
         value-filter: onlyfinite
