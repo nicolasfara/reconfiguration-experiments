@@ -27,9 +27,11 @@ class SimpleLoadBasedReconfiguration
     val computationalCost = node.getOrElse[Double]("computationCost", 0.0)
     val load = node.getOrElse[Double]("load", 0.0)
     val deviceChoiceStrategy = node.getOrElse[String]("deviceChoiceStrategy", "highFirst")
+    val simulationTime = node.get[Int]("simulationTime")
+    val gradientRetentionTime = node.get[Int]("gradientRetentionTime")
 
-    val slots = 3600 / (thickHosts.size() * 2 - 1)
-    val timeSlice = 3600 / slots
+    val slots = simulationTime / (thickHosts.size() * 2 - 1)
+    val timeSlice = simulationTime / slots
     val slice = math.floor(alchemistTimestamp.toDouble / slots).toInt
     val activeNodes =
       if (alchemistTimestamp.toDouble < math.ceil(slots / 2) * timeSlice)
@@ -59,8 +61,8 @@ class SimpleLoadBasedReconfiguration
       val (ttl, devicesCanOffload) =
         G[(Int, Set[ID])](isThickHost, (counter, devicesCanOffloading.map(_._2)), identity, nbrRange _)
 
-      val lastN = recentValues(30, ttl)
-      val isLeaderLost = if (lastN.size == 30) lastN.forall(_ == lastN.head) else false
+      val lastN = recentValues(gradientRetentionTime, ttl)
+      val isLeaderLost = if (lastN.size == gradientRetentionTime) lastN.forall(_ == lastN.head) else false
 
       var canOffload = if (!isLeaderLost) devicesCanOffload.contains(mid()) else false
       canOffload = canOffload && potential != Double.PositiveInfinity

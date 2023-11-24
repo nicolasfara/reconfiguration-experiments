@@ -3,13 +3,13 @@ incarnation: scafi
 _constants:
   exportInterval: &exportInterval 10
   programRate: &programRate 1.0
-  retentionTime: &retentionTime 15.0
-  simulationSeconds: &simulationSeconds 3600
+  gradientRetentionTime: &gradientRetentionTime 15
+  simulationSeconds: &simulationSeconds 360
 
 variables:
   random: &random
     min: 0
-    max: 9
+    max: 500
     step: 1
     default: 0
   devices:
@@ -38,8 +38,8 @@ variables:
     language: kotlin
     formula: |
       mapOf(
-          "advanced" to listOf("it.unibo.pulverization.load.AdvancedLoadBasedReconfiguration", 15.0),
-          "simple" to listOf("it.unibo.pulverization.load.SimpleLoadBasedReconfiguration", 15.0),
+          "advanced" to listOf("it.unibo.pulverization.load.AdvancedLoadBasedReconfiguration", 10.0),
+          "simple" to listOf("it.unibo.pulverization.load.SimpleLoadBasedReconfiguration", 10.0),
       )[behavior]
 
 seeds:
@@ -77,6 +77,10 @@ deployments:
   contents:
     - molecule: "loadType"
       concentration: *loadType
+    - molecule: "simulationTime"
+      concentration: *simulationSeconds
+    - molecule: "gradientRetentionTime"
+      concentration: *gradientRetentionTime
 
 environment:
   type: Continuous2DEnvironment
