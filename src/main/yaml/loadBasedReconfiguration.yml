@@ -14,7 +14,7 @@ variables:
     default: 0
   devices:
     type: ArbitraryVariable
-    parameters: [ 100, [ 25, 100, 1000 ] ]
+    parameters: [ 100, [ 100, 1000, 5000 ] ]
   computationalCost: &computationalCost
     type: ArbitraryVariable
     parameters: [ 1.0, [ 1.0, 3.0, 10.0 ] ]

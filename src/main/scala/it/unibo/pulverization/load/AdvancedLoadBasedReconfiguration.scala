@@ -20,6 +20,20 @@ class AdvancedLoadBasedReconfiguration
     .map(node => node.getId)
     .toList
 
+  private def getDegradationFactor(time: Double, maxTime: Double): Double = {
+    time match {
+      case t if t < maxTime / 9 => 1.0
+      case t if t < (maxTime / 9) * 2 => 0.8
+      case t if t < (maxTime / 9) * 3 => 0.6
+      case t if t < (maxTime / 9) * 4 => 0.4
+      case t if t < (maxTime / 9) * 5 => 0.2
+      case t if t < (maxTime / 9) * 6 => 0.4
+      case t if t < (maxTime / 9) * 7 => 0.6
+      case t if t < (maxTime / 9) * 8 => 0.8
+      case _ => 1.0
+    }
+  }
+
   override def main(): Unit = {
     val isThickHost = node.getOrElse[Boolean]("isThickHost", false)
     val computationalCost = node.getOrElse[Double]("computationCost", 0.0)
@@ -28,14 +42,17 @@ class AdvancedLoadBasedReconfiguration
     val simulationTime = node.get[Int]("simulationTime")
     val gradientRetentionTime = node.get[Int]("gradientRetentionTime")
 
-    val slots = simulationTime / (thickHosts.size() * 2 - 1)
-    val timeSlice = simulationTime / slots
-    val slice = math.floor(alchemistTimestamp.toDouble / slots).toInt
-    val activeNodes =
-      if (alchemistTimestamp.toDouble < math.ceil(slots / 2) * timeSlice)
-        thickHosts.stream().limit(thickHosts.size() - slice).toList
-      else thickHosts.stream().limit(slice - (thickHosts.size() - 2)).toList
-    val active = activeNodes.contains(mid())
+//    val slots = simulationTime / (thickHosts.size() * 2 - 1)
+//    val timeSlice = simulationTime / slots
+//    val slice = math.floor(alchemistTimestamp.toDouble / slots).toInt
+//    val activeNodes =
+//      if (alchemistTimestamp.toDouble < math.ceil(slots / 2) * timeSlice)
+//        thickHosts.stream().limit(thickHosts.size() - slice).toList
+//      else thickHosts.stream().limit(slice - (thickHosts.size() - 2)).toList
+//    val active = activeNodes.contains(mid())
+    val nodeToDrop = math.floor(getDegradationFactor(alchemistTimestamp.toDouble, simulationTime.toDouble) * thickHosts.size())
+    node.put("DEBUG", alchemistTimestamp.toDouble)
+    val active = thickHosts.stream().limit(nodeToDrop.toInt).toList.contains(mid())
 
     val isActive = if (node.get[Int]("loadType") == 0) active || !isThickHost else true
 
