@@ -4,12 +4,12 @@ _constants:
   exportInterval: &exportInterval 10
   programRate: &programRate 1.0
   gradientRetentionTime: &gradientRetentionTime 15
-  simulationSeconds: &simulationSeconds 360
+  simulationSeconds: &simulationSeconds 3600
 
 variables:
   random: &random
     min: 0
-    max: 500
+    max: 9
     step: 1
     default: 0
   devices:

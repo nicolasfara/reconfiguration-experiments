@@ -24,14 +24,12 @@ class SimpleLoadBasedReconfiguration
 
   private def getDegradationFactor(time: Double, maxTime: Double): Double = {
     time match {
-      case t if t < maxTime / 9 => 1.0
-      case t if t < (maxTime / 9) * 2 => 0.8
-      case t if t < (maxTime / 9) * 3 => 0.6
-      case t if t < (maxTime / 9) * 4 => 0.4
-      case t if t < (maxTime / 9) * 5 => 0.2
-      case t if t < (maxTime / 9) * 6 => 0.4
-      case t if t < (maxTime / 9) * 7 => 0.6
-      case t if t < (maxTime / 9) * 8 => 0.8
+      case t if t < maxTime / 7 => 1.0
+      case t if t < (maxTime / 7) * 2 => 0.75
+      case t if t < (maxTime / 7) * 3 => 0.50
+      case t if t < (maxTime / 7) * 4 => 0.25
+      case t if t < (maxTime / 7) * 5 => 0.50
+      case t if t < (maxTime / 7) * 6 => 0.75
       case _ => 1.0
     }
   }
@@ -44,16 +42,9 @@ class SimpleLoadBasedReconfiguration
     val simulationTime = node.get[Int]("simulationTime")
     val gradientRetentionTime = node.get[Int]("gradientRetentionTime")
 
-//    val slots = simulationTime / (thickHosts.size() * 2 - 1)
-//    val timeSlice = simulationTime / slots
-//    val slice = math.floor(alchemistTimestamp.toDouble / slots).toInt
-//    val activeNodes =
-//      if (alchemistTimestamp.toDouble < math.ceil(slots / 2) * timeSlice)
-//        thickHosts.stream().limit(thickHosts.size() - slice).toList
-//      else thickHosts.stream().limit(slice - (thickHosts.size() - 2)).toList
-//    val active = activeNodes.contains(mid())
-    val nodeToDrop = math.ceil(getDegradationFactor(alchemistTimestamp.toDouble, simulationTime.toDouble) * thickHosts.size())
-    val active = thickHosts.stream().limit(nodeToDrop.toInt).toList.contains(mid())
+    val nodeToTake =
+      math.ceil(getDegradationFactor(alchemistTimestamp.toDouble, simulationTime.toDouble) * thickHosts.size())
+    val active = thickHosts.stream().limit(nodeToTake.toInt).toList.contains(mid())
 
     val isActive = if (node.get[Int]("loadType") == 0) active || !isThickHost else true
 
@@ -77,8 +68,8 @@ class SimpleLoadBasedReconfiguration
       val (ttl, devicesCanOffload) =
         G[(Int, Set[ID])](isThickHost, (counter, devicesCanOffloading.map(_._2)), identity, nbrRange _)
 
-      val lastN = recentValues(gradientRetentionTime, ttl)
-      val isLeaderLost = if (lastN.size == gradientRetentionTime) lastN.forall(_ == lastN.head) else false
+      val lastN = recentValues(gradientRetentionTime * 2, ttl)
+      val isLeaderLost = if (lastN.size == gradientRetentionTime * 2) lastN.forall(_ == lastN.head) else false
 
       var canOffload = if (!isLeaderLost) devicesCanOffload.contains(mid()) else false
       canOffload = canOffload && potential != Double.PositiveInfinity
