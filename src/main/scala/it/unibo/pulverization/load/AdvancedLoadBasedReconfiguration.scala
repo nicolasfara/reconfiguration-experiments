@@ -41,7 +41,7 @@ class AdvancedLoadBasedReconfiguration
     val gradientRetentionTime = node.get[Int]("gradientRetentionTime")
 
     val nodeToTake =
-      math.floor(getDegradationFactor(alchemistTimestamp.toDouble, simulationTime.toDouble) * thickHosts.size())
+      math.ceil(getDegradationFactor(alchemistTimestamp.toDouble, simulationTime.toDouble) * thickHosts.size())
     val active = thickHosts.stream().limit(nodeToTake.toInt).toList.contains(mid())
 
     val isActive = if (node.get[Int]("loadType") == 0) active || !isThickHost else true

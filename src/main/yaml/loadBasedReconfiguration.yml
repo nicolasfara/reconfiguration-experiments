@@ -4,7 +4,6 @@ _constants:
   exportInterval: &exportInterval 10
   programRate: &programRate 1.0
   gradientRetentionTime: &gradientRetentionTime 15
-  simulationSeconds: &simulationSeconds 3600
 
 variables:
   random: &random
@@ -12,9 +11,12 @@ variables:
     max: 9
     step: 1
     default: 0
+  simulationSeconds: &simulationSeconds
+    type: ArbitraryVariable
+    parameters: [ 720, [ 3600, 720 ] ]
   devices:
     type: ArbitraryVariable
-    parameters: [ 100, [ 100, 1000, 5000 ] ]
+    parameters: [ 100, [ 25, 100, 1000 ] ]
   computationalCost: &computationalCost
     type: ArbitraryVariable
     parameters: [ 1.0, [ 1.0, 3.0, 10.0 ] ]
