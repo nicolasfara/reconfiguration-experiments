@@ -54,7 +54,7 @@ val batchAlchemistConfiguration = """
 launcher:
   type: HeadlessSimulationLauncher
   parameters:
-    variables: [random, network, behavior, devices, load, computationalCost]
+    variables: [random, network, behavior, devices, load, computationalCost, simulationSeconds]
 """.trimIndent()
 
 fun graphicsAlchemistConfiguration(effectName: String) = """
