@@ -1,4 +1,3 @@
-
 name: CI/CD Process
 on:
   workflow_call:
@@ -12,7 +11,7 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [windows, macos, ubuntu]
+        os: [ windows, macos, ubuntu ]
     runs-on: ${{ matrix.os }}-latest
     concurrency:
       group: build-${{ github.workflow }}-${{ matrix.os }}-${{ github.event.number || github.ref }}
@@ -42,7 +41,10 @@ jobs:
       - name: Deploy
         uses: DanySK/build-check-deploy-gradle-action@2.2.12
         with:
-          deploy-command: ./gradlew dockerPushImage
+          deploy-command: |
+            ./gradlew dockerPushImage
+            npm install
+            npx semantic-release
           should-run-codecov: false
           should-deploy: true
           build-command: true
