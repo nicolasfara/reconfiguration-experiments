@@ -1,3 +1,21 @@
+## [1.0.1](https://github.com/nicolasfara/reconfiguration-experiments/compare/1.0.0...1.0.1) (2023-12-14)
+
+
+### Dependency updates
+
+* **deps:** update dependency semantic-release-preconfigured-conventional-commits to v1.1.82 ([5b5b3b4](https://github.com/nicolasfara/reconfiguration-experiments/commit/5b5b3b49c15e90c1f260b3f6bab4d96f76a82026))
+* **deps:** update plugin com.gradle.enterprise to v3.16.1 ([fe62ab9](https://github.com/nicolasfara/reconfiguration-experiments/commit/fe62ab9d0901047f73adf5e279e923df4e9b0e36))
+
+
+### Documentation
+
+* update readme ([60d23dd](https://github.com/nicolasfara/reconfiguration-experiments/commit/60d23dd576c667361defd226ab87c8163a8e7e98))
+
+
+### General maintenance
+
+* remove unused file ([30e9b3f](https://github.com/nicolasfara/reconfiguration-experiments/commit/30e9b3f39087d107c6f3b090f47db4080f835d85))
+
 ## 1.0.0 (2023-12-13)
 
 
