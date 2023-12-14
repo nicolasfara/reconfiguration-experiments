@@ -187,3 +187,4 @@ pyrightconfig.json
 **/data_summary_std
 **/timeprocessed
 
+node_modules
