@@ -1,3 +1,10 @@
+## [1.1.0](https://github.com/nicolasfara/reconfiguration-experiments/compare/1.0.1...1.1.0) (2023-12-15)
+
+
+### Features
+
+* updated charts ([bec6a4b](https://github.com/nicolasfara/reconfiguration-experiments/commit/bec6a4b4aef24a5e40b71644ab2fdf60d21653b8))
+
 ## [1.0.1](https://github.com/nicolasfara/reconfiguration-experiments/compare/1.0.0...1.0.1) (2023-12-14)
 
 
