@@ -22,7 +22,7 @@ variables:
     parameters: [ 1.0, [ 1.0, 3.0, 10.0 ] ]
   load: &loadType
     type: ArbitraryVariable
-    parameters: [ 0, [ 0, 1 ] ] # 0 = constant, 1 = variable
+    parameters: [ 1, [ 0, 1 ] ] # 0 = constant, 1 = variable
   network:
     type: ArbitraryVariable
     parameters: [ "lobster", [ "barabasi", "lobster" ] ]

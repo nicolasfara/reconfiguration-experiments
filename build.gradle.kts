@@ -1,4 +1,5 @@
 import org.gradle.configurationcache.extensions.capitalized
+import java.io.ByteArrayOutputStream
 
 /*
  * DEFAULT GRADLE BUILD FOR ALCHEMIST SIMULATOR
@@ -59,7 +60,7 @@ launcher:
 
 fun graphicsAlchemistConfiguration(effectName: String) = """
     launcher:
-      type: SingleRunSwingUI
+      type: SwingGUI
       parameters:
         graphics: effects/$effectName.json
 """.trimIndent()
@@ -68,42 +69,75 @@ val simulationFiles = File(rootProject.rootDir.path + "/src/main/yaml").listFile
     ?.filter { it.extension == "yml" } // pick all yml files in src/main/yaml
     ?.sortedBy { it.nameWithoutExtension } // sort them, we like reproducibility
 
+val runAllGraphic by tasks.register<DefaultTask>("runAllGraphic") {
+    group = alchemistGroup
+    description = "Launches all simulations with the graphic subsystem enabled"
+}
+val runAllBatch by tasks.register<DefaultTask>("runAllBatch") {
+    group = alchemistGroup
+    description = "Launches all experiments"
+}
+
+// Heap size estimation for batches
+val maxHeap: Long? by project
+val heap: Long = maxHeap ?: if (System.getProperty("os.name").lowercase().contains("linux")) {
+    ByteArrayOutputStream().use { output ->
+        exec {
+            executable = "bash"
+            args = listOf("-c", "cat /proc/meminfo | grep MemAvailable | grep -o '[0-9]*'")
+            standardOutput = output
+        }
+        output.toString().trim().toLong() / 1024
+    }.also { println("Detected ${it}MB RAM available.") } * 9 / 10
+} else {
+    // Guess 16GB RAM of which 2 used by the OS
+    14 * 1024L
+}
+val taskSizeFromProject: Int? by project
+val taskSize = taskSizeFromProject ?: 512
+val threadCount = maxOf(1, minOf(Runtime.getRuntime().availableProcessors(), heap.toInt() / taskSize))
+
 /*
  * Scan the folder with the simulation files, and create a task for each one of them.
  */
-
-simulationFiles?.forEach {
-    // one simulation file -> one gradle task
-    val task by tasks.register<JavaExec>("run${it.nameWithoutExtension.capitalized()}") {
-        group = alchemistGroup // This is for better organization when running ./gradlew tasks
-        description = "Launches simulation ${it.nameWithoutExtension}" // Just documentation
-        mainClass.set("it.unibo.alchemist.Alchemist") // The class to launch
-        classpath = sourceSets["main"].runtimeClasspath // The classpath to use
-        // Uses the latest version of java
-        javaLauncher.set(
-            javaToolchains.launcherFor {
-                languageVersion.set(JavaLanguageVersion.of(multiJvm.latestJava))
-            },
-        )
-        jvmArgs("-Dsun.java2d.opengl=true")
-        // These are the program arguments
-        args("run", it.absolutePath, "--override")
-        when {
-            // If it is running in a Continuous Integration environment, use the "headless" mode of the simulator
-            // Namely, force the simulator not to use graphical output.
-            System.getenv("CI") == "true" -> args(ciAlchemistConfiguration)
-            // If it is running in batch mode, use the "headless" mode of the simulator with the variables specified
-            // in the 'batchAlchemistConfiguration'
-            batch == "true" -> args(batchAlchemistConfiguration)
-            // A graphics environment should be available, so load the effects for the UI from the "effects" folder
-            // Effects are expected to be named after the simulation file
-            else -> args(graphicsAlchemistConfiguration(it.nameWithoutExtension))
+File(rootProject.rootDir.path + "/src/main/yaml").listFiles()
+    ?.filter { it.extension == "yml" }
+    ?.sortedBy { it.nameWithoutExtension }
+    ?.forEach {
+        fun basetask(name: String, additionalConfiguration: JavaExec.() -> Unit = {}) = tasks.register<JavaExec>(name) {
+            group = alchemistGroup
+            description = "Launches graphic simulation ${it.nameWithoutExtension}"
+            mainClass.set("it.unibo.alchemist.Alchemist")
+            classpath = sourceSets["main"].runtimeClasspath
+            args("run", it.absolutePath)
+            javaLauncher.set(
+                javaToolchains.launcherFor {
+                    languageVersion.set(JavaLanguageVersion.of(17))
+                },
+            )
+            if (System.getenv("CI") == "true") {
+                args("--override", "terminate: { type: AfterTime, parameters: [2] } ")
+            } else {
+                this.additionalConfiguration()
+            }
         }
+        val capitalizedName = it.nameWithoutExtension.capitalized()
+        val graphic by basetask("run${capitalizedName}Graphic") {
+            args(
+                "--override",
+                "monitors: { type: SwingGUI, parameters: { graphics: effects/${it.nameWithoutExtension}.json } }",
+                "--override",
+                "launcher: { parameters: { batch: [], autoStart: false } }",
+            )
+        }
+        runAllGraphic.dependsOn(graphic)
+        val batch by basetask("run${capitalizedName}Batch") {
+            description = "Launches batch experiments for $capitalizedName"
+            maxHeapSize = "${minOf(heap.toInt(), Runtime.getRuntime().availableProcessors() * taskSize)}m"
+            File("data").mkdirs()
+        }
+        runAllBatch.dependsOn(batch)
     }
-    // task.dependsOn(classpathJar) // Uncomment to switch to jar-based classpath resolution
-    runAll.dependsOn(task)
-}
-
 val runAllLoadBased by tasks.register<DefaultTask>("runAllLoadBased") {
     group = alchemistGroup
     description = "Launches all load-based simulations"
