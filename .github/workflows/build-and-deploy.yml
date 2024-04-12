@@ -20,7 +20,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4.1.2
       - name: Check the simulations on CI
-        uses: DanySK/build-check-deploy-gradle-action@2.4.14
+        uses: DanySK/build-check-deploy-gradle-action@2.4.15
         with:
           check-command: ./gradlew runAll
           should-run-codecov: false
@@ -42,7 +42,7 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
       - name: Deploy
-        uses: DanySK/build-check-deploy-gradle-action@2.4.14
+        uses: DanySK/build-check-deploy-gradle-action@2.4.15
         with:
           deploy-command: |
             ./gradlew dockerPushImage
