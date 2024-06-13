@@ -49,7 +49,6 @@ class AdvancedLoadBasedReconfiguration
     branch(isActive) {
       val counter = rep(0)(_ + 1)
       val myMetric = () => computationalCost
-``
       val potential = Grad(isThickHost, load, myMetric)
       val devicesCovered =
         collect[Set[(Double, ID)]](potential, _ ++ _, Set((computationalCost, mid())), Set(), myMetric)
