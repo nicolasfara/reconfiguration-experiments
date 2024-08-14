@@ -16,7 +16,7 @@ ktor-content-negotiator = { module = "io.ktor:ktor-client-content-negotiation", 
 arrow = { module = "io.arrow-kt:arrow-core", version = "1.2.4" }
 arrow-coroutines = { module = "io.arrow-kt:arrow-fx-coroutines", version = "1.2.4" }
 kotlinx-dataframe = { module = "org.jetbrains.kotlinx:dataframe", version = "0.13.1" }
-kotlinx-kandy = { module = "org.jetbrains.kotlinx:kandy-lets-plot", version = "0.6.0" }
+kotlinx-kandy = { module = "org.jetbrains.kotlinx:kandy-lets-plot", version = "0.7.0" }
 
 [bundles]
 alchemist = [
