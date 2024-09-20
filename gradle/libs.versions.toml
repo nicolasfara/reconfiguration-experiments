@@ -6,7 +6,7 @@ ktor = "2.3.12"
 [libraries]
 alchemist = { module = "it.unibo.alchemist:alchemist", version.ref = "alchemist" }
 alchemist-incarnation-scafi = { module = "it.unibo.alchemist:alchemist-incarnation-scafi", version.ref = "alchemist" }
-alchemist-incarnation-collektive = { module = "it.unibo.collektive:alchemist-incarnation-collektive", version = "10.3.1" }
+alchemist-incarnation-collektive = { module = "it.unibo.collektive:alchemist-incarnation-collektive", version = "10.3.2" }
 alchemist-euclidean-geometry = { module = "it.unibo.alchemist:alchemist-euclidean-geometry", version.ref = "alchemist" }
 alchemist-swingui = { module = "it.unibo.alchemist:alchemist-swingui", version.ref = "alchemist" }
 ktor-client = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
