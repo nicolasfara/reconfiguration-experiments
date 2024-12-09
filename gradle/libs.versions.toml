@@ -15,7 +15,7 @@ ktor-json-serializer = { module = "io.ktor:ktor-serialization-kotlinx-json", ver
 ktor-content-negotiator = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
 arrow = { module = "io.arrow-kt:arrow-core", version = "2.0.0" }
 arrow-coroutines = { module = "io.arrow-kt:arrow-fx-coroutines", version = "2.0.0" }
-kotlinx-dataframe = { module = "org.jetbrains.kotlinx:dataframe", version = "0.14.2" }
+kotlinx-dataframe = { module = "org.jetbrains.kotlinx:dataframe", version = "0.15.0" }
 kotlinx-kandy = { module = "org.jetbrains.kotlinx:kandy-lets-plot", version = "0.7.1" }
 
 [bundles]
