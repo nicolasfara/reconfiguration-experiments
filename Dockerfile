@@ -1,5 +1,5 @@
 # Generate a gradle dockerfile for executing this project
-FROM eclipse-temurin:23
+FROM eclipse-temurin:24
 
 WORKDIR /app
 COPY . .
