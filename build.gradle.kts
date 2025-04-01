@@ -26,7 +26,7 @@ dependencies {
     implementation(libs.bundles.arrow)
     implementation(libs.kotlinx.dataframe)
     implementation(libs.kotlinx.kandy)
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.1")
 }
 
 multiJvm {
